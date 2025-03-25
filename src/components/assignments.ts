@@ -5,12 +5,6 @@ import { openSubmissionModal } from './submissionModal';
 export function renderAssignments(container: HTMLElement): void {
   container.innerHTML = '';
   
-  // Page title
-  const pageTitle = document.createElement('h1');
-  pageTitle.className = 'page-title';
-  pageTitle.textContent = 'Assignments';
-  container.appendChild(pageTitle);
-  
   // Assignments list
   const assignmentsCard = document.createElement('div');
   assignmentsCard.className = 'card';

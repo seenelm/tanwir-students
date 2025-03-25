@@ -5,12 +5,6 @@ import { Quiz } from '../types';
 export function renderQuizzes(container: HTMLElement): void {
   container.innerHTML = '';
   
-  // Page title
-  const pageTitle = document.createElement('h1');
-  pageTitle.className = 'page-title';
-  pageTitle.textContent = 'Quizzes & Tests';
-  container.appendChild(pageTitle);
-  
   // Create tabs
   const tabsContainer = document.createElement('div');
   tabsContainer.className = 'tabs-container';
@@ -58,98 +52,117 @@ function renderUpcomingQuizzes(container: HTMLElement, quizzes: Quiz[]): void {
   container.innerHTML = '';
   
   if (quizzes.length === 0) {
-    const emptyMessage = document.createElement('p');
-    emptyMessage.className = 'empty-message';
-    emptyMessage.textContent = 'No upcoming quizzes or tests.';
-    container.appendChild(emptyMessage);
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = '<span class="material-icons">event_available</span><p>No upcoming quizzes or tests</p>';
+    container.appendChild(emptyState);
     return;
   }
   
-  const quizGrid = document.createElement('div');
-  quizGrid.className = 'quiz-grid';
+  const quizzesGrid = document.createElement('div');
+  quizzesGrid.className = 'quizzes-grid';
   
   quizzes.forEach(quiz => {
     const quizCard = document.createElement('div');
-    quizCard.className = 'card quiz-card';
+    quizCard.className = 'quiz-card';
     
-    const title = document.createElement('h2');
+    // Date display
+    const dateBox = document.createElement('div');
+    dateBox.className = 'quiz-date-box';
+    
+    // Check if scheduledDate exists, use current date as fallback
+    const dateObj = quiz.scheduledDate ? new Date(quiz.scheduledDate) : new Date();
+    const month = dateObj.toLocaleString('default', { month: 'short' });
+    const day = dateObj.getDate();
+    
+    const monthEl = document.createElement('div');
+    monthEl.className = 'quiz-month';
+    monthEl.textContent = month;
+    
+    const dayEl = document.createElement('div');
+    dayEl.className = 'quiz-day';
+    dayEl.textContent = day.toString();
+    
+    dateBox.appendChild(monthEl);
+    dateBox.appendChild(dayEl);
+    
+    // Quiz content
+    const quizContent = document.createElement('div');
+    quizContent.className = 'quiz-content';
+    
+    const title = document.createElement('h3');
+    title.className = 'quiz-title';
     title.textContent = quiz.title;
     
-    const subject = document.createElement('p');
-    subject.innerHTML = `<strong>Subject:</strong> ${quiz.subject}`;
+    const subject = document.createElement('div');
+    subject.className = 'quiz-subject';
+    subject.innerHTML = `<span class="material-icons">book</span> ${quiz.subject}`;
     
-    const date = document.createElement('p');
-    date.innerHTML = `<strong>Date:</strong> ${quiz.scheduledDate || 'TBD'}`;
+    const duration = document.createElement('div');
+    duration.className = 'quiz-duration';
+    duration.innerHTML = `<span class="material-icons">schedule</span> ${quiz.duration || 'Not specified'}`;
     
-    const duration = document.createElement('p');
-    duration.innerHTML = `<strong>Duration:</strong> ${quiz.duration || 'Not specified'}`;
+    // Topics tags
+    const topicsContainer = document.createElement('div');
+    topicsContainer.className = 'quiz-topics';
     
-    const topics = document.createElement('p');
-    topics.innerHTML = `<strong>Topics:</strong> ${quiz.topics?.join(', ') || 'Not specified'}`;
+    if (quiz.topics && quiz.topics.length > 0) {
+      quiz.topics.forEach(topic => {
+        const topicTag = document.createElement('span');
+        topicTag.className = 'topic-tag';
+        topicTag.textContent = topic;
+        topicsContainer.appendChild(topicTag);
+      });
+    }
     
-    quizCard.appendChild(title);
-    quizCard.appendChild(subject);
-    quizCard.appendChild(date);
-    quizCard.appendChild(duration);
-    quizCard.appendChild(topics);
+    // Action button
+    const actionContainer = document.createElement('div');
+    actionContainer.className = 'quiz-actions';
     
-    quizGrid.appendChild(quizCard);
+    const prepareBtn = document.createElement('button');
+    prepareBtn.className = 'btn btn-secondary';
+    prepareBtn.innerHTML = '<span class="material-icons">menu_book</span> Prepare';
+    prepareBtn.addEventListener('click', () => {
+      alert(`Prepare for ${quiz.title} on ${quiz.subject}`);
+    });
+    
+    actionContainer.appendChild(prepareBtn);
+    
+    quizContent.appendChild(title);
+    quizContent.appendChild(subject);
+    quizContent.appendChild(duration);
+    quizContent.appendChild(topicsContainer);
+    quizContent.appendChild(actionContainer);
+    
+    quizCard.appendChild(dateBox);
+    quizCard.appendChild(quizContent);
+    quizzesGrid.appendChild(quizCard);
   });
   
-  container.appendChild(quizGrid);
+  container.appendChild(quizzesGrid);
 }
 
 function renderCompletedQuizzes(container: HTMLElement, quizzes: Quiz[]): void {
   container.innerHTML = '';
   
   if (quizzes.length === 0) {
-    const emptyMessage = document.createElement('p');
-    emptyMessage.className = 'empty-message';
-    emptyMessage.textContent = 'No completed quizzes or tests.';
-    container.appendChild(emptyMessage);
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = '<span class="material-icons">assignment_turned_in</span><p>No completed quizzes or tests</p>';
+    container.appendChild(emptyState);
     return;
   }
   
-  const table = document.createElement('table');
-  table.className = 'quizzes-table';
-  
-  // Table header
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  
-  ['Title', 'Subject', 'Date Taken', 'Score', 'Actions'].forEach(headerText => {
-    const th = document.createElement('th');
-    th.textContent = headerText;
-    headerRow.appendChild(th);
-  });
-  
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-  
-  // Table body
-  const tbody = document.createElement('tbody');
+  const completedGrid = document.createElement('div');
+  completedGrid.className = 'completed-quizzes-grid';
   
   quizzes.forEach(quiz => {
-    const tr = document.createElement('tr');
+    const quizCard = document.createElement('div');
+    quizCard.className = 'completed-quiz-card';
     
-    // Title
-    const tdTitle = document.createElement('td');
-    tdTitle.textContent = quiz.title;
-    tr.appendChild(tdTitle);
-    
-    // Subject
-    const tdSubject = document.createElement('td');
-    tdSubject.textContent = quiz.subject;
-    tr.appendChild(tdSubject);
-    
-    // Date Taken
-    const tdDate = document.createElement('td');
-    tdDate.textContent = quiz.dateTaken || 'Unknown';
-    tr.appendChild(tdDate);
-    
-    // Score
-    const tdScore = document.createElement('td');
-    const scoreBadge = document.createElement('span');
+    // Score display
+    const scoreBox = document.createElement('div');
+    scoreBox.className = 'quiz-score-box';
     
     let scoreClass = 'score-average';
     if (quiz.score && quiz.score >= 90) {
@@ -158,27 +171,74 @@ function renderCompletedQuizzes(container: HTMLElement, quizzes: Quiz[]): void {
       scoreClass = 'score-poor';
     }
     
-    scoreBadge.className = `score ${scoreClass}`;
-    scoreBadge.textContent = quiz.score ? `${quiz.score}%` : 'N/A';
-    tdScore.appendChild(scoreBadge);
-    tr.appendChild(tdScore);
+    scoreBox.classList.add(scoreClass);
     
-    // Actions
-    const tdActions = document.createElement('td');
+    const scoreLabel = document.createElement('div');
+    scoreLabel.className = 'score-label';
+    scoreLabel.textContent = 'Score';
+    
+    const scoreValue = document.createElement('div');
+    scoreValue.className = 'score-value';
+    scoreValue.textContent = quiz.score ? `${quiz.score}%` : 'N/A';
+    
+    scoreBox.appendChild(scoreLabel);
+    scoreBox.appendChild(scoreValue);
+    
+    // Quiz content
+    const quizContent = document.createElement('div');
+    quizContent.className = 'quiz-content';
+    
+    const title = document.createElement('h3');
+    title.className = 'quiz-title';
+    title.textContent = quiz.title;
+    
+    const subject = document.createElement('div');
+    subject.className = 'quiz-subject';
+    subject.innerHTML = `<span class="material-icons">book</span> ${quiz.subject}`;
+    
+    const date = document.createElement('div');
+    date.className = 'quiz-date';
+    date.innerHTML = `<span class="material-icons">event</span> ${quiz.dateTaken || 'Unknown'}`;
+    
+    quizContent.appendChild(title);
+    quizContent.appendChild(subject);
+    quizContent.appendChild(date);
+    
+    // Feedback section
+    if (quiz.feedback) {
+      const feedback = document.createElement('div');
+      feedback.className = 'quiz-feedback';
+      
+      const feedbackIcon = document.createElement('span');
+      feedbackIcon.className = 'material-icons';
+      feedbackIcon.textContent = 'comment';
+      
+      const feedbackText = document.createElement('p');
+      feedbackText.textContent = quiz.feedback;
+      
+      feedback.appendChild(feedbackIcon);
+      feedback.appendChild(feedbackText);
+      quizContent.appendChild(feedback);
+    }
+    
+    // Action button
+    const actionContainer = document.createElement('div');
+    actionContainer.className = 'quiz-actions';
     
     const viewBtn = document.createElement('button');
     viewBtn.className = 'btn btn-secondary';
-    viewBtn.textContent = 'View Details';
+    viewBtn.innerHTML = '<span class="material-icons">visibility</span> View Details';
     viewBtn.addEventListener('click', () => {
-      // View quiz details logic
       alert(`Quiz details for: ${quiz.title}\nScore: ${quiz.score || 'N/A'}%\nFeedback: ${quiz.feedback || 'No feedback available'}`);
     });
-    tdActions.appendChild(viewBtn);
     
-    tr.appendChild(tdActions);
-    tbody.appendChild(tr);
+    actionContainer.appendChild(viewBtn);
+    quizContent.appendChild(actionContainer);
+    
+    quizCard.appendChild(scoreBox);
+    quizCard.appendChild(quizContent);
+    completedGrid.appendChild(quizCard);
   });
   
-  table.appendChild(tbody);
-  container.appendChild(table);
+  container.appendChild(completedGrid);
 }

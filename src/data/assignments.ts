@@ -4,33 +4,40 @@ import { Assignment } from '../types';
 const assignments: Assignment[] = [
   {
     id: 1,
-    title: 'Research Paper',
-    description: 'Write a 5-page research paper on a topic of your choice',
+    title: 'Tafsir Research Paper',
+    description: 'Write a 5-page research paper on the exegesis of Surah Al-Kahf',
     dueDate: '2025-04-15',
     status: 'Not Submitted'
   },
   {
     id: 2,
-    title: 'Math Problem Set',
-    description: 'Complete problems 1-20 in Chapter 5',
+    title: 'Fiqh Case Studies',
+    description: 'Complete the case studies on purification (Taharah) and prayer (Salah)',
     dueDate: '2025-04-10',
     status: 'Submitted',
-    submittedFiles: ['math_homework.pdf']
+    submittedFiles: ['fiqh_case_studies.pdf']
   },
   {
     id: 3,
-    title: 'History Essay',
-    description: 'Write a 3-page essay on World War II',
+    title: 'Islamic History Essay',
+    description: 'Write a 3-page essay on the contributions of scholars during the Golden Age of Islam',
     dueDate: '2025-04-05',
     status: 'Graded',
-    feedback: 'Excellent work! Your analysis was thorough and well-supported.',
-    submittedFiles: ['history_essay.docx']
+    feedback: 'Excellent work! Your analysis of the scholarly contributions was thorough and well-supported.',
+    submittedFiles: ['islamic_history_essay.docx']
   },
   {
     id: 4,
-    title: 'Science Lab Report',
-    description: 'Write a lab report for the experiment conducted in class',
+    title: 'Hadith Analysis',
+    description: 'Analyze the chain of narration (isnad) and text (matn) of the assigned hadith collection',
     dueDate: '2025-04-20',
+    status: 'Not Submitted'
+  },
+  {
+    id: 5,
+    title: 'Arabic Grammar Exercises',
+    description: 'Complete exercises on verb conjugation and sentence structure in classical Arabic',
+    dueDate: '2025-04-25',
     status: 'Not Submitted'
   }
 ];
