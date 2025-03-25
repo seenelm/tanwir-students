@@ -1,4 +1,6 @@
 // src/components/Sidebar.ts
+import { updateNavbarTitle } from './navbar';
+
 interface MenuItem {
   text: string;
   icon: string;
@@ -8,6 +10,20 @@ interface MenuItem {
 export function createSidebar(): HTMLElement {
   const sidebar = document.createElement('aside');
   sidebar.className = 'sidebar';
+  
+  // Add logo container
+  const logoContainer = document.createElement('div');
+  logoContainer.className = 'sidebar-logo';
+  
+  // Create logo image
+  const logoImg = document.createElement('img');
+  logoImg.src = '/src/assets/tanwir-horizontal.webp';
+  logoImg.alt = 'Tanwir';
+  logoImg.className = 'tanwir-logo';
+  
+  // Append logo to container
+  logoContainer.appendChild(logoImg);
+  sidebar.appendChild(logoContainer);
   
   const menuItems: MenuItem[] = [
     { text: 'Dashboard', icon: 'dashboard', route: '/' },
@@ -40,11 +56,28 @@ export function createSidebar(): HTMLElement {
     
     a.addEventListener('click', (e) => {
       e.preventDefault();
+      
+      // Update the navbar title with the current tab name
+      updateNavbarTitle(item.text);
+      
+      // Update active tab styling
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      a.classList.add('active');
+      
       navigateTo(item.route);
     });
   });
   
   sidebar.appendChild(nav);
+  
+  // Set default active tab
+  const defaultLink = nav.querySelector('.sidebar-link');
+  if (defaultLink) {
+    defaultLink.classList.add('active');
+  }
+  
   return sidebar;
 }
 

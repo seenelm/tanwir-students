@@ -1,5 +1,5 @@
 import './style.css';
-import { createNavbar } from './components/navbar';
+import { createNavbar, updateNavbarTitle } from './components/navbar';
 import { createSidebar } from './components/sidebar';
 import { renderDashboard } from './components/dashboard';
 
@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!isAuthenticated) {
     renderLoginPage(mainContent);
   } else {
-    // Default to dashboard
+    // Default to dashboard and set initial navbar title
+    updateNavbarTitle('Dashboard');
     renderDashboard(mainContent);
   }
 });

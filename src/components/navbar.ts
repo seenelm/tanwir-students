@@ -6,7 +6,8 @@ export function createNavbar(): HTMLElement {
   // Logo/Title
   const title = document.createElement('div');
   title.className = 'navbar-title';
-  title.textContent = 'Student Dashboard';
+  title.id = 'current-tab-title';
+  title.textContent = 'Dashboard'; // Default tab
   
   // User info
   const userInfo = document.createElement('div');
@@ -37,4 +38,12 @@ export function createNavbar(): HTMLElement {
   navbar.appendChild(userInfo);
   
   return navbar;
+}
+
+// Function to update the navbar title based on current tab
+export function updateNavbarTitle(tabName: string): void {
+  const titleElement = document.getElementById('current-tab-title');
+  if (titleElement) {
+    titleElement.textContent = tabName;
+  }
 }
