@@ -1,6 +1,5 @@
 // src/components/Assignments.ts
 import { getAllAssignments } from '../data/assignments';
-import { Assignment } from '../types';
 import { openSubmissionModal } from './submissionModal';
 
 export function renderAssignments(container: HTMLElement): void {
