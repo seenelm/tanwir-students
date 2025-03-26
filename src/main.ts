@@ -1,5 +1,5 @@
 import { App } from './components/App';
-import './style.css';
+import './styles/main.css';
 
 document.addEventListener('DOMContentLoaded', () => {
   const app = new App();

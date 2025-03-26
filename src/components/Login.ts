@@ -1,5 +1,5 @@
 import { AuthService } from '../services/auth';
-import '../style.css';
+import '../styles/main.css';
 
 export class Login {
   private readonly CLASS_NAMES = {

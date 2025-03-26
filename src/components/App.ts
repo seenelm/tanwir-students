@@ -4,7 +4,7 @@ import { Content } from './Content';
 import { Login } from './Login';
 import { AuthService } from '../services/auth';
 import { User } from 'firebase/auth';
-import '../style.css';
+import '../styles/main.css';
 
 export class App {
   private readonly CLASS_NAMES = {
@@ -31,10 +31,14 @@ export class App {
     this.sidebar.setOnPageChange((page) => this.header.setCurrentPage(page));
 
     // Listen for auth state changes
-    this.authService.onAuthStateChanged((user) => this.handleAuthStateChange(user));
+    const unsubscribeAuth = this.authService.onAuthStateChanged((user) => this.handleAuthStateChange(user));
     
-    // Listen for login event
+    // Listen for login and logout events
     window.addEventListener('userLoggedIn', () => this.renderApp());
+    window.addEventListener('userLoggedOut', () => {
+      unsubscribeAuth(); // Clean up auth listener
+      this.renderLogin();
+    });
   }
 
   private handleAuthStateChange(user: User | null) {

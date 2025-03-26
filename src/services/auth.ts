@@ -6,6 +6,7 @@ import {
   User
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 export class AuthService {
   private static instance: AuthService;
@@ -31,6 +32,14 @@ export class AuthService {
         prompt: 'select_account'
       });
       const result = await signInWithPopup(auth, provider);
+      
+      // Check if user is authorized
+      const isAuthorized = await this.checkUserAuthorization(result.user);
+      if (!isAuthorized) {
+        await this.signOut();
+        throw new Error('Unauthorized user. Access denied.');
+      }
+      
       return result.user;
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
@@ -43,6 +52,16 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  private async checkUserAuthorization(user: User): Promise<boolean> {
+    if (!user.email) return false;
+    
+    // Check if user exists in authorized users collection
+    const db = getFirestore();
+    const userDoc = await getDoc(doc(db, 'authorizedUsers', user.email));
+    console.log('User doc:', userDoc);
+    return userDoc.exists();
   }
 
   async signOut(): Promise<void> {

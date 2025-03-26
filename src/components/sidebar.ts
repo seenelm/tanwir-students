@@ -1,4 +1,5 @@
-import '../style.css';
+import '../styles/main.css';
+import { AuthService } from '../services/auth';
 
 type Route = {
   path: string;
@@ -11,17 +12,20 @@ export class Sidebar {
   private readonly CLASS_NAMES = {
     sidebar: 'sidebar',
     active: 'active',
+    signout: 'signout-button'
   };
   private onPageChange?: (page: string) => void;
+  private authService: AuthService;
 
   private readonly routes: Route[] = [
     { path: '/home', title: 'Home', icon: 'home' },
     { path: '/profile', title: 'Profile', icon: 'person' },
-    { path: '/dashboard', title: 'Dashboard', icon: 'dashboard' },
+    { path: '/courses', title: 'Courses', icon: 'school' },
     { path: '/settings', title: 'Settings', icon: 'settings' },
   ];
 
   constructor() {
+    this.authService = AuthService.getInstance();
     this.handleOutsideClick = this.handleOutsideClick.bind(this);
     // Set initial route
     const path = window.location.pathname;
@@ -66,6 +70,15 @@ export class Sidebar {
     }
   }
 
+  private async handleSignOut() {
+    try {
+      await this.authService.signOut();
+      window.dispatchEvent(new CustomEvent('userLoggedOut'));
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  }
+
   toggleActive() {
     this.isActive = !this.isActive;
     const sidebar = document.querySelector(`.${this.CLASS_NAMES.sidebar}`);
@@ -90,10 +103,19 @@ export class Sidebar {
           `).join('')}
         </ul>
       </nav>
+      <div class="${this.CLASS_NAMES.signout}">
+        <button>
+          <span class="material-icons">logout</span>
+          Sign Out
+        </button>
+      </div>
     `;
 
     const nav = sidebar.querySelector('nav');
     nav?.addEventListener('click', (e) => this.handleNavClick(e));
+
+    const signOutButton = sidebar.querySelector(`.${this.CLASS_NAMES.signout} button`);
+    signOutButton?.addEventListener('click', () => this.handleSignOut());
 
     document.addEventListener('click', this.handleOutsideClick);
 

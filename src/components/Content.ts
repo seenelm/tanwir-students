@@ -1,4 +1,4 @@
-import '../style.css';
+import '../styles/main.css';
 
 export class Content {
   private readonly CLASS_NAMES = {

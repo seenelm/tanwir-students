@@ -1,5 +1,5 @@
 import { Sidebar } from './Sidebar';
-import '../style.css';
+import '../styles/main.css';
 
 export class Header {
   private readonly CLASS_NAMES = {
