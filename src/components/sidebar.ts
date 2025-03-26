@@ -12,7 +12,9 @@ export class Sidebar {
   private readonly CLASS_NAMES = {
     sidebar: 'sidebar',
     active: 'active',
-    signout: 'signout-button'
+    signout: 'signout-button',
+    logo: 'sidebar-logo',
+    logoContainer: 'logo-container'
   };
   private onPageChange?: (page: string) => void;
   private authService: AuthService;
@@ -52,6 +54,10 @@ export class Sidebar {
   private navigateToRoute(route: Route) {
     history.pushState(null, '', route.path);
     this.onPageChange?.(route.title);
+    // Dispatch navigation event
+    window.dispatchEvent(new CustomEvent('navigationEvent', {
+      detail: { path: route.path }
+    }));
   }
 
   private handleNavClick(e: Event) {
@@ -86,36 +92,54 @@ export class Sidebar {
   }
 
   render(): HTMLElement {
-    const sidebar = document.createElement('aside');
+    const sidebar = document.createElement('div');
     sidebar.className = this.CLASS_NAMES.sidebar;
+
+    // Add logo container
+    const logoContainer = document.createElement('div');
+    logoContainer.className = this.CLASS_NAMES.logoContainer;
     
+    const logo = document.createElement('img');
+    logo.src = '/src/assets/logo.webp';
+    logo.alt = 'Tanwir Logo';
+    logo.className = this.CLASS_NAMES.logo;
+
+    const brandName = document.createElement('span');
+    brandName.textContent = 'Tanwir';
+    
+    logoContainer.appendChild(logo);
+    logoContainer.appendChild(brandName);
+    sidebar.appendChild(logoContainer);
+
     const currentPath = window.location.pathname;
     
-    sidebar.innerHTML = `
-      <nav>
-        <ul>
-          ${this.routes.map(route => `
-            <li>
-              <a href="${route.path}" class="${currentPath === route.path ? 'active' : ''}">
-                <span class="material-icons">${route.icon}</span> ${route.title}
-              </a>
-            </li>
-          `).join('')}
-        </ul>
-      </nav>
-      <div class="${this.CLASS_NAMES.signout}">
-        <button>
-          <span class="material-icons">logout</span>
-          Sign Out
-        </button>
-      </div>
+    const nav = document.createElement('nav');
+    nav.innerHTML = `
+      <ul>
+        ${this.routes.map(route => `
+          <li>
+            <a href="${route.path}" class="${currentPath === route.path ? 'active' : ''}">
+              <span class="material-icons">${route.icon}</span> ${route.title}
+            </a>
+          </li>
+        `).join('')}
+      </ul>
     `;
+    sidebar.appendChild(nav);
 
-    const nav = sidebar.querySelector('nav');
-    nav?.addEventListener('click', (e) => this.handleNavClick(e));
+    const signOutButton = document.createElement('div');
+    signOutButton.className = this.CLASS_NAMES.signout;
+    signOutButton.innerHTML = `
+      <button>
+        <span class="material-icons">logout</span>
+        Sign Out
+      </button>
+    `;
+    sidebar.appendChild(signOutButton);
 
-    const signOutButton = sidebar.querySelector(`.${this.CLASS_NAMES.signout} button`);
-    signOutButton?.addEventListener('click', () => this.handleSignOut());
+    nav.addEventListener('click', (e) => this.handleNavClick(e));
+
+    signOutButton.querySelector('button')?.addEventListener('click', () => this.handleSignOut());
 
     document.addEventListener('click', this.handleOutsideClick);
 

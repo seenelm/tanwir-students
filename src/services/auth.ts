@@ -6,7 +6,16 @@ import {
   User
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
+
+export type UserRole = 'student' | 'admin';
+
+export interface AuthorizedUser {
+  CreatedAt: Date;
+  FirstName: string;
+  LastName: string;
+  Role: UserRole;
+}
 
 export class AuthService {
   private static instance: AuthService;
@@ -33,9 +42,29 @@ export class AuthService {
       });
       const result = await signInWithPopup(auth, provider);
       
-      // Check if user is authorized
-      const isAuthorized = await this.checkUserAuthorization(result.user);
+      console.log('Google sign in successful:', {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName
+      });
+      
+      // Check if user exists in authorizedUsers
+      const db = getFirestore();
+      const userDoc = await getDoc(doc(db, 'authorizedUsers', result.user.uid));
+      
+      // If user doesn't exist, create them as a student
+      if (!userDoc.exists()) {
+        console.log('Creating new authorized user with student role');
+        await this.createAuthorizedUser(result.user, 'student');
+        return result.user;
+      }
+      
+      // For existing users, check their authorization
+      const isAuthorized = userDoc.exists();
+      console.log('User authorization check result:', isAuthorized);
+      
       if (!isAuthorized) {
+        console.log('User not authorized, signing out');
         await this.signOut();
         throw new Error('Unauthorized user. Access denied.');
       }
@@ -54,15 +83,22 @@ export class AuthService {
     }
   }
 
-  private async checkUserAuthorization(user: User): Promise<boolean> {
-    if (!user.email) return false;
+  // private async checkUserAuthorization(user: User): Promise<boolean> {
+  //   if (!user.uid) {
+  //     console.log('No UID found for user');
+  //     return false;
+  //   }
     
-    // Check if user exists in authorized users collection
-    const db = getFirestore();
-    const userDoc = await getDoc(doc(db, 'authorizedUsers', user.email));
-    console.log('User doc:', userDoc);
-    return userDoc.exists();
-  }
+  //   // Check if user exists in authorized users collection using UID
+  //   const db = getFirestore();
+  //   console.log('Checking authorization for UID:', user.uid);
+  //   const userDoc = await getDoc(doc(db, 'authorizedUsers', user.uid));
+  //   console.log('Authorization check result:', {
+  //     exists: userDoc.exists(),
+  //     data: userDoc.exists() ? userDoc.data() : null
+  //   });
+  //   return userDoc.exists();
+  // }
 
   async signOut(): Promise<void> {
     try {
@@ -81,5 +117,57 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     return auth.currentUser;
+  }
+
+  async getUserData(userId: string): Promise<AuthorizedUser | null> {
+    try {
+      const db = getFirestore();
+      const userDoc = await getDoc(doc(db, 'authorizedUsers', userId));
+      
+      if (userDoc.exists()) {
+        return userDoc.data() as AuthorizedUser;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return null;
+    }
+  }
+
+  async getUserIdByEmail(email: string): Promise<string | null> {
+    try {
+      const db = getFirestore();
+      const usersRef = collection(db, 'authorizedUsers');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
+      return null;
+    }
+  }
+
+  async createAuthorizedUser(user: User, role: UserRole = 'student'): Promise<void> {
+    if (!user.uid || !user.email) throw new Error('User must have UID and email');
+
+    const db = getFirestore();
+    const userData: AuthorizedUser = {
+      CreatedAt: new Date(),
+      FirstName: user.displayName?.split(' ')[0] || '',
+      LastName: user.displayName?.split(' ')[1] || '',
+      Role: role
+    };
+
+    try {
+      await setDoc(doc(db, 'authorizedUsers', user.uid), userData);
+      console.log('Authorized user created successfully with role:', role);
+    } catch (error) {
+      console.error('Error creating authorized user:', error);
+      throw error;
+    }
   }
 }

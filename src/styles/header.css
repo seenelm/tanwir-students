@@ -19,7 +19,7 @@
 }
 
 .header-actions {
-  display: none;
+  display: block;
 }
 
 .menu-toggle {
@@ -30,4 +30,16 @@
   -webkit-tap-highlight-color: transparent;
   outline: none;
   user-select: none;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+}
+
+.menu-toggle .material-icons {
+  font-size: 24px;
+  color: var(--text-color);
 }
