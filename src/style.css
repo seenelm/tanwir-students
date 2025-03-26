@@ -30,7 +30,7 @@ body {
 .sidebar {
   width: var(--sidebar-width);
   background-color: white;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #eaeaea;
   position: fixed;
   height: 100vh;
   left: 0;
@@ -70,7 +70,7 @@ body {
 .header {
   height: var(--header-height);
   background-color: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #eaeaea;
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
@@ -78,6 +78,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 900;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin: 0;
 }
 
 .header-actions {
@@ -103,6 +110,53 @@ body {
 /* Content Component */
 .content {
   padding: 2rem;
+}
+
+/* Login Component */
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+
+.login-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.login-button:hover {
+  background-color: #f8f8f8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-button img {
+  width: 20px;
+  height: 20px;
+}
+
+.login-error {
+  color: #d32f2f;
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive Styles */
