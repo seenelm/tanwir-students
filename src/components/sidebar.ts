@@ -21,7 +21,7 @@ export class Sidebar {
 
   private readonly routes: Route[] = [
     { path: '/home', title: 'Home', icon: 'home' },
-    { path: '/profile', title: 'Profile', icon: 'person' },
+    { path: '/assignments', title: 'Assignments', icon: 'assignment' },
     { path: '/courses', title: 'Courses', icon: 'school' },
     { path: '/settings', title: 'Settings', icon: 'settings' },
   ];
@@ -105,7 +105,7 @@ export class Sidebar {
     logo.className = this.CLASS_NAMES.logo;
 
     const brandName = document.createElement('span');
-    brandName.textContent = 'Tanwir';
+    brandName.textContent = 'Tanwir Institute';
     
     logoContainer.appendChild(logo);
     logoContainer.appendChild(brandName);

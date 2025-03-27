@@ -1,5 +1,7 @@
 import '../styles/main.css';
 import { Courses } from './Courses';
+import { Home } from './Home';
+import { Assignments } from './Assignments';
 
 export class Content {
   private readonly CLASS_NAMES = {
@@ -29,13 +31,11 @@ export class Content {
         const courses = new Courses();
         return courses.render();
       case '/home':
-        const home = document.createElement('div');
-        home.innerHTML = '<h2>Home</h2><p>Welcome to Tanwir!</p>';
-        return home;
-      case '/profile':
-        const profile = document.createElement('div');
-        profile.innerHTML = '<h2>Profile</h2><p>Your profile information will appear here.</p>';
-        return profile;
+        const home = new Home();
+        return home.render();
+      case '/assignments':
+        const assignments = new Assignments();
+        return assignments.render();
       case '/settings':
         const settings = document.createElement('div');
         settings.innerHTML = '<h2>Settings</h2><p>Settings panel will be available here.</p>';

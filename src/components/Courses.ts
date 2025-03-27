@@ -1,5 +1,6 @@
-import { CourseService, Course } from '../services/courses';
+import { CourseService } from '../services/courses';
 import { AuthService } from '../services/auth';
+import { Course } from '../types/course';
 import '../styles/courses.css';
 
 export class Courses {
@@ -8,6 +9,7 @@ export class Courses {
   private container: HTMLElement;
   private courses: Course[] = [];
   private isAdmin: boolean = false;
+  private modal: HTMLElement | null = null;
 
   constructor() {
     this.courseService = CourseService.getInstance();
@@ -41,25 +43,76 @@ export class Courses {
     }
   }
 
+  private createModal(): HTMLElement {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <div class="modal-body"></div>
+      </div>
+    `;
+
+    const closeButton = modal.querySelector('.close-button');
+    closeButton?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    return modal;
+  }
+
+  private showCreateCourseModal(): void {
+    if (!this.modal) {
+      this.modal = this.createModal();
+      document.body.appendChild(this.modal);
+    }
+
+    const modalBody = this.modal.querySelector('.modal-body');
+    if (modalBody) {
+      modalBody.innerHTML = '';
+      modalBody.appendChild(this.createCourseForm());
+    }
+
+    this.modal.style.display = 'block';
+  }
+
   private createCourseForm(): HTMLElement {
     const form = document.createElement('form');
     form.className = 'course-form';
     form.innerHTML = `
       <h3>Create New Course</h3>
-      <input type="text" placeholder="Course Name" required>
-      <textarea placeholder="Course Description" required></textarea>
-      <button type="submit">Create Course</button>
+      <div class="form-group">
+        <label for="courseName">Course Name</label>
+        <input type="text" id="courseName" placeholder="Enter course name" required>
+      </div>
+      <div class="form-group">
+        <label for="courseDescription">Course Description</label>
+        <textarea id="courseDescription" placeholder="Enter course description" required></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="primary-button">Create Course</button>
+      </div>
     `;
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nameInput = form.querySelector('input') as HTMLInputElement;
-      const descInput = form.querySelector('textarea') as HTMLTextAreaElement;
+      const nameInput = form.querySelector('#courseName') as HTMLInputElement;
+      const descInput = form.querySelector('#courseDescription') as HTMLTextAreaElement;
 
       try {
         await this.courseService.createCourse(nameInput.value, descInput.value);
         await this.loadCourses();
         this.render();
+        if (this.modal) {
+          this.modal.style.display = 'none';
+        }
         nameInput.value = '';
         descInput.value = '';
       } catch (error) {
@@ -129,10 +182,6 @@ export class Courses {
   render(): HTMLElement {
     this.container.innerHTML = '';
 
-    if (this.isAdmin) {
-      this.container.appendChild(this.createCourseForm());
-    }
-
     const coursesGrid = document.createElement('div');
     coursesGrid.className = 'courses-grid';
     
@@ -141,6 +190,15 @@ export class Courses {
     });
 
     this.container.appendChild(coursesGrid);
+
+    if (this.isAdmin) {
+      const createButton = document.createElement('button');
+      createButton.className = 'create-course-button';
+      createButton.textContent = 'Create New Course';
+      createButton.addEventListener('click', () => this.showCreateCourseModal());
+      this.container.appendChild(createButton);
+    }
+
     return this.container;
   }
 }

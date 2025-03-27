@@ -8,20 +8,8 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { auth } from '../config/firebase';
+import { Course } from '../types/course';
 
-export interface Course {
-  Name: string;
-  Description: string;
-  CreatedBy: string;
-  CreatedAt: Date;
-}
-
-export interface CourseEnrollment {
-  CourseId: string;
-  UserId: string;
-  Role: 'student' | 'admin';
-  EnrolledAt: Date;
-}
 
 export class CourseService {
   private static instance: CourseService;
@@ -97,7 +85,11 @@ export class CourseService {
         query(collection(this.db, 'courses'), where('__name__', '==', courseId))
       );
       if (!courseDoc.empty) {
-        const courseData = courseDoc.docs[0].data() as Course;
+        const doc = courseDoc.docs[0];
+        const courseData = {
+          Id: doc.id,
+          ...doc.data()
+        } as Course;
         courses.push(courseData);
       }
     }
