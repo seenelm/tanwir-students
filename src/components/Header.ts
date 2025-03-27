@@ -1,4 +1,4 @@
-import { Sidebar } from './Sidebar1';
+import { Sidebar } from './Sidebar';
 import '../styles/main.css';
 
 export class Header {

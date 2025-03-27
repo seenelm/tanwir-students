@@ -1,4 +1,4 @@
-import { Sidebar } from './Sidebar1';
+import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Content } from './Content';
 import { Login } from './Login';
