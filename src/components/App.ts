@@ -1,4 +1,4 @@
-import { Sidebar } from './Sidebar';
+import { Sidebar } from './Sidebar1';
 import { Header } from './Header';
 import { Content } from './Content';
 import { Login } from './Login';
@@ -28,7 +28,7 @@ export class App {
     this.container = document.createElement('div');
 
     // Set up page change handler
-    this.sidebar.setOnPageChange((page) => this.header.setCurrentPage(page));
+    this.sidebar.setOnPageChange((page: string) => this.header.setCurrentPage(page));
 
     // Listen for auth state changes
     const unsubscribeAuth = this.authService.onAuthStateChanged((user) => this.handleAuthStateChange(user));
