@@ -100,7 +100,7 @@ export class Sidebar {
     logoContainer.className = this.CLASS_NAMES.logoContainer;
     
     const logo = document.createElement('img');
-    logo.src = '/src/assets/logo.webp';
+    logo.src = '/logo.webp';
     logo.alt = 'Tanwir Logo';
     logo.className = this.CLASS_NAMES.logo;
 
