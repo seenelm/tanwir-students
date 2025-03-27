@@ -4,7 +4,10 @@ import '../styles/main.css';
 export class Login {
   private readonly CLASS_NAMES = {
     login: 'login',
+    loginContainer: 'login-container',
     button: 'login-button',
+    logo: 'login-logo',
+    title: 'login-title'
   };
 
   private authService: AuthService;
@@ -41,15 +44,32 @@ export class Login {
     const container = document.createElement('div');
     container.className = this.CLASS_NAMES.login;
 
+    const loginContainer = document.createElement('div');
+    loginContainer.className = this.CLASS_NAMES.loginContainer;
+
+    // Add logo
+    const logo = document.createElement('img');
+    logo.src = '/logo.webp';
+    logo.alt = 'Tanwir Logo';
+    logo.className = this.CLASS_NAMES.logo;
+    loginContainer.appendChild(logo);
+
+    // Add title
+    const title = document.createElement('h1');
+    title.className = this.CLASS_NAMES.title;
+    title.textContent = 'Tanwir Portal';
+    loginContainer.appendChild(title);
+
     const button = document.createElement('button');
     button.className = this.CLASS_NAMES.button;
     button.innerHTML = `
       <img src="https://www.google.com/favicon.ico" alt="Google" />
-      Sign in with Google
+      <span>Sign in with Google</span>
     `;
 
     button.addEventListener('click', () => this.handleLogin(button));
-    container.appendChild(button);
+    loginContainer.appendChild(button);
+    container.appendChild(loginContainer);
 
     return container;
   }

@@ -1,74 +1,227 @@
+:root {
+  --login-primary: #2563eb;
+  --login-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --login-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+  --login-text: #1e293b;
+  --login-bg: #f8fafc;
+}
+
 .login {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--background-color);
+  background: var(--login-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background decoration */
+.login::before,
+.login::after {
+  content: '';
+  position: absolute;
+  width: 1000px;
+  height: 1000px;
+  border-radius: 50%;
+  background: var(--login-gradient);
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.login::before {
+  top: -20%;
+  left: -10%;
+  animation: float 20s infinite alternate;
+}
+
+.login::after {
+  bottom: -20%;
+  right: -10%;
+  animation: float 15s infinite alternate-reverse;
+}
+
+@keyframes float {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to { transform: translate(50px, 50px) rotate(60deg); }
+}
+
+.login-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: var(--login-shadow);
+  max-width: 400px;
+  width: 90%;
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-logo {
+  width: 140px;
+  height: auto;
+  transform-origin: center;
+  animation: logoReveal 1s ease-out;
+}
+
+@keyframes logoReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.login-title {
+  font-size: 2rem;
+  color: var(--login-text);
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.login-subtitle {
+  color: #64748b;
+  text-align: center;
+  margin-top: -2rem;
+  animation: fadeIn 0.6s ease-out 0.4s both;
 }
 
 .login-button {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 24px;
+  gap: 12px;
+  padding: 14px 28px;
   background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 16px;
+  font-weight: 500;
+  color: #1e293b;
   cursor: pointer;
   transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
+  animation: fadeIn 0.6s ease-out 0.5s both;
 }
 
 .login-button:hover {
-  background-color: #f8f8f8;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.login-button:active {
+  transform: translateY(0);
 }
 
 .login-button img {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s ease;
+}
+
+.login-button:hover img {
+  transform: scale(1.1);
+}
+
+.login-button span {
+  color: #1e293b;
 }
 
 .login-error {
-  color: #d32f2f;
+  color: #dc2626;
   margin-top: 1rem;
   text-align: center;
   font-size: 0.9rem;
-  animation: fadeIn 0.3s ease;
+  padding: 12px 20px;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fee2e2;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .login-container {
+    padding: 2rem;
+    width: 85%;
+  }
+  
+  .login-title {
+    font-size: 1.75rem;
+  }
+  
+  .login-button {
+    padding: 12px 24px;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Sign Out Button */
 .signout-button {
-    padding: 1rem;
-    border-top: 1px solid #eaeaea;
-  }
-  
-  .signout-button button {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0.75rem;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .signout-button button:hover {
-    background-color: #d32f2f;
-  }
-  
-  .signout-button .material-icons {
-    font-size: 20px;
-  }
+  padding: 1rem;
+  border-top: 1px solid #eaeaea;
+}
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+.signout-button button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.75rem;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.signout-button button:hover {
+  background-color: #d32f2f;
+}
+
+.signout-button .material-icons {
+  font-size: 20px;
 }
