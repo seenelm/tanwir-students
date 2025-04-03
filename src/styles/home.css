@@ -45,7 +45,7 @@
 
 .overview-card .material-icons {
   font-size: 2rem;
-  color: #2196f3;
+  color: var(--primary-color);
 }
 
 .card-content h3 {
@@ -59,4 +59,95 @@
   font-size: 1.5rem;
   font-weight: 500;
   color: #333;
+}
+
+.scores-section,
+.upcoming-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid #e0e0e0;
+  margin-top: 2rem;
+}
+
+.scores-title,
+.upcoming-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scores-title .material-icons,
+.upcoming-title .material-icons {
+  color: var(--primary-color);
+}
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.score-item {
+  background: var(--primary-light);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.score-item h4 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.score-item p {
+  margin: 0.5rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  gap: 1rem;
+}
+
+.upcoming-item .material-icons {
+  color: var(--primary-color);
+}
+
+.upcoming-item-content {
+  flex: 1;
+}
+
+.upcoming-item-content h4 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.upcoming-item-content p {
+  margin: 0.25rem 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.upcoming-item-date {
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 0.9rem;
 }

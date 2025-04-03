@@ -61,4 +61,5 @@
 
 .sidebar nav ul li a .material-icons {
   margin-right: 0.5rem;
+  color: var(--primary-color);
 }
