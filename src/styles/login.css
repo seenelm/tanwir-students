@@ -1,7 +1,7 @@
 :root {
-  --login-primary: #2563eb;
-  --login-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --login-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+  --login-primary: #009078;
+  --login-gradient: linear-gradient(135deg, #00a88d 0%, #007d68 100%);
+  --login-shadow: 0 10px 40px -10px rgba(0, 144, 120, 0.15);
   --login-text: #1e293b;
   --login-bg: #f8fafc;
 }
