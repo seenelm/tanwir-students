@@ -8,9 +8,11 @@ import {
   where,
   updateDoc,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  orderBy,
+  getDoc
 } from 'firebase/firestore';
-import { Assignment, StudentAssignment, AssignmentStatus } from '../types/assignment';
+import { Assignment, StudentAssignment, AssignmentStatus, AssignmentAttachment, AssignmentQuestion, StudentAnswer, AssignmentDiscussion } from '../types/assignment';
 import { AuthService } from './auth';
 
 export class AssignmentService {
@@ -156,5 +158,179 @@ export class AssignmentService {
       ...doc.data(),
       SubmittedAt: doc.data().SubmittedAt ? (doc.data().SubmittedAt as Timestamp).toDate() : undefined
     } as StudentAssignment));
+  }
+
+  /**
+   * Attachment methods
+   */
+  async addAttachment(assignmentId: string, file: File): Promise<string> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const userRole = await this.authService.getUserRole();
+    if (userRole !== 'admin') throw new Error('Only admins can add attachments');
+
+    // TODO: Implement file upload to Firebase Storage
+    // For now, we'll just store the metadata
+    const attachmentData = {
+      Name: file.name,
+      FileType: file.type,
+      FileUrl: '', // This should come from Storage upload
+      UploadedBy: user.uid,
+      CreatedAt: serverTimestamp()
+    };
+
+    const attachmentRef = collection(this.db, `assignments/${assignmentId}/attachments`);
+    const docRef = await addDoc(attachmentRef, attachmentData);
+    return docRef.id;
+  }
+
+  async getAttachments(assignmentId: string): Promise<AssignmentAttachment[]> {
+    const attachmentsRef = collection(this.db, `assignments/${assignmentId}/attachments`);
+    const snapshot = await getDocs(attachmentsRef);
+    
+    return snapshot.docs.map(doc => ({
+      Id: doc.id,
+      ...doc.data(),
+      CreatedAt: doc.data().CreatedAt?.toDate()
+    } as AssignmentAttachment));
+  }
+
+  /**
+   * Question methods
+   */
+  async addQuestion(assignmentId: string, question: Omit<AssignmentQuestion, 'Id' | 'CreatedAt'>): Promise<string> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const userRole = await this.authService.getUserRole();
+    if (userRole !== 'admin') throw new Error('Only admins can add questions');
+
+    const questionData = {
+      ...question,
+      CreatedAt: serverTimestamp()
+    };
+
+    const questionsRef = collection(this.db, `assignments/${assignmentId}/questions`);
+    const docRef = await addDoc(questionsRef, questionData);
+    return docRef.id;
+  }
+
+  async getQuestions(assignmentId: string): Promise<AssignmentQuestion[]> {
+    const questionsRef = collection(this.db, `assignments/${assignmentId}/questions`);
+    const snapshot = await getDocs(questionsRef);
+    
+    return snapshot.docs.map(doc => ({
+      Id: doc.id,
+      ...doc.data(),
+      CreatedAt: doc.data().CreatedAt?.toDate()
+    } as AssignmentQuestion));
+  }
+
+  /**
+   * Student answer methods
+   */
+  async submitAnswer(assignmentId: string, questionId: string, answer: string): Promise<string> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const userRole = await this.authService.getUserRole();
+    if (userRole !== 'student') throw new Error('Only students can submit answers');
+
+    const answerData = {
+      QuestionId: questionId,
+      StudentId: user.uid,
+      Answer: answer,
+      SubmittedAt: serverTimestamp()
+    };
+
+    const answersRef = collection(this.db, `assignments/${assignmentId}/studentAnswers`);
+    const docRef = await addDoc(answersRef, answerData);
+    return docRef.id;
+  }
+
+  async getStudentAnswers(assignmentId: string, studentId?: string): Promise<StudentAnswer[]> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const userRole = await this.authService.getUserRole();
+    if (userRole !== 'admin' && (!studentId || studentId !== user.uid)) {
+      throw new Error('Students can only view their own answers');
+    }
+
+    const answersRef = collection(this.db, `assignments/${assignmentId}/studentAnswers`);
+    const q = studentId 
+      ? query(answersRef, where('StudentId', '==', studentId))
+      : answersRef;
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      Id: doc.id,
+      ...doc.data(),
+      SubmittedAt: doc.data().SubmittedAt?.toDate(),
+      GradedAt: doc.data().GradedAt?.toDate()
+    } as StudentAnswer));
+  }
+
+  async gradeAnswer(assignmentId: string, answerId: string, score: number): Promise<void> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const userRole = await this.authService.getUserRole();
+    if (userRole !== 'admin') throw new Error('Only admins can grade answers');
+
+    const answerRef = doc(this.db, `assignments/${assignmentId}/studentAnswers/${answerId}`);
+    await updateDoc(answerRef, {
+      Score: score,
+      GradedBy: user.uid,
+      GradedAt: serverTimestamp()
+    });
+  }
+
+  /**
+   * Discussion methods
+   */
+  async addDiscussion(assignmentId: string, content: string): Promise<string> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const discussionData = {
+      UserId: user.uid,
+      Content: content,
+      CreatedAt: serverTimestamp()
+    };
+
+    const discussionsRef = collection(this.db, `assignments/${assignmentId}/discussions`);
+    const docRef = await addDoc(discussionsRef, discussionData);
+    return docRef.id;
+  }
+
+  async getDiscussions(assignmentId: string): Promise<AssignmentDiscussion[]> {
+    const discussionsRef = collection(this.db, `assignments/${assignmentId}/discussions`);
+    const q = query(discussionsRef, orderBy('CreatedAt', 'asc'));
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      Id: doc.id,
+      ...doc.data(),
+      CreatedAt: doc.data().CreatedAt?.toDate(),
+      UpdatedAt: doc.data().UpdatedAt?.toDate()
+    } as AssignmentDiscussion));
+  }
+
+  async updateDiscussion(assignmentId: string, discussionId: string, content: string): Promise<void> {
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const discussionRef = doc(this.db, `assignments/${assignmentId}/discussions/${discussionId}`);
+    const discussionDoc = await getDoc(discussionRef);
+    
+    if (!discussionDoc.exists()) throw new Error('Discussion not found');
+    if (discussionDoc.data().UserId !== user.uid) throw new Error('Can only edit your own discussions');
+
+    await updateDoc(discussionRef, {
+      Content: content,
+      UpdatedAt: serverTimestamp()
+    });
   }
 }

@@ -170,4 +170,12 @@ export class AuthService {
       throw error;
     }
   }
+
+  async getUserRole(): Promise<UserRole | null> {
+    const user = this.getCurrentUser();
+    if (!user) return null;
+    
+    const userData = await this.getUserData(user.uid);
+    return userData?.Role || null;
+  }
 }

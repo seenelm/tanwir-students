@@ -21,3 +21,40 @@ export interface StudentAssignment {
 }
 
 export type AssignmentStatus = 'pending' | 'submitted' | 'graded';
+
+export interface AssignmentAttachment {
+  Id: string;
+  Name: string;
+  FileUrl: string;
+  FileType: string;
+  UploadedBy: string;
+  CreatedAt: Date;
+}
+
+export interface AssignmentQuestion {
+  Id: string;
+  Question: string;
+  Type: 'text' | 'multiple_choice';
+  Options?: string[];
+  Points: number;
+  CreatedAt: Date;
+}
+
+export interface StudentAnswer {
+  Id: string;
+  QuestionId: string;
+  StudentId: string;
+  Answer: string;
+  Score?: number;
+  GradedBy?: string;
+  SubmittedAt: Date;
+  GradedAt?: Date;
+}
+
+export interface AssignmentDiscussion {
+  Id: string;
+  UserId: string;
+  Content: string;
+  CreatedAt: Date;
+  UpdatedAt?: Date;
+}
