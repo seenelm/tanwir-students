@@ -514,7 +514,8 @@ export class Assignments {
       </div>
     `;
 
-    const currentContent = container.innerHTML;
+    // Store the current content before replacing it
+    // const questionsTab = container.querySelector('.questions-tab');
     container.innerHTML = '';
     container.appendChild(questionForm);
 
@@ -523,10 +524,12 @@ export class Assignments {
     const optionsList = questionForm.querySelector('#optionsList') as HTMLElement;
     const addOptionButton = questionForm.querySelector('.add-option-button') as HTMLElement;
 
+    // Type change handler
     typeSelect.addEventListener('change', () => {
       optionsGroup.style.display = typeSelect.value === 'multiple_choice' ? 'block' : 'none';
     });
 
+    // Add option handler
     addOptionButton.addEventListener('click', () => {
       const newOption = document.createElement('input');
       newOption.type = 'text';
@@ -535,11 +538,13 @@ export class Assignments {
       optionsList.appendChild(newOption);
     });
 
+    // Cancel button handler
     const cancelButton = questionForm.querySelector('.cancel-button');
-    cancelButton?.addEventListener('click', () => {
-      container.innerHTML = currentContent;
+    cancelButton?.addEventListener('click', async () => {
+      await this.loadQuestionsTab(container, assignment);
     });
 
+    // Save button handler
     const saveButton = questionForm.querySelector('.save-button');
     saveButton?.addEventListener('click', async () => {
       const questionText = (questionForm.querySelector('#questionText') as HTMLTextAreaElement).value;
