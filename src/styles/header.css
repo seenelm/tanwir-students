@@ -1,7 +1,7 @@
 .header {
   height: var(--header-height);
-  background-color: white;
-  border-bottom: 1px solid #eaeaea;
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
   padding: 0 1.5rem;
   display: flex;
   align-items: center;

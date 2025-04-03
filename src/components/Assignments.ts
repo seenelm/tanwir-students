@@ -587,23 +587,6 @@ export class Assignments {
   render(): HTMLElement {
     this.container.innerHTML = '';
 
-    const header = document.createElement('div');
-    // header.className = 'assignments-header';
-    
-    // const title = document.createElement('h2');
-    // title.textContent = 'Assignments';
-    // header.appendChild(title);
-
-    if (this.isAdmin) {
-      const createButton = document.createElement('button');
-      createButton.className = 'create-assignment-button';
-      createButton.textContent = 'Create Assignment';
-      createButton.addEventListener('click', () => this.showCreateAssignmentModal());
-      header.appendChild(createButton);
-    }
-
-    this.container.appendChild(header);
-
     const assignmentsGrid = document.createElement('div');
     assignmentsGrid.className = 'assignments-grid';
     
@@ -612,6 +595,15 @@ export class Assignments {
     });
 
     this.container.appendChild(assignmentsGrid);
+
+    if (this.isAdmin) {
+      const createButton = document.createElement('button');
+      createButton.className = 'create-assignment-button';
+      createButton.textContent = 'Create Assignment';
+      createButton.addEventListener('click', () => this.showCreateAssignmentModal());
+      this.container.appendChild(createButton);
+    }
+
     return this.container;
   }
 }

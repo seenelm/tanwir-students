@@ -2,74 +2,17 @@
   padding: 2rem;
 }
 
-.overview-section {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  border: 1px solid #e0e0e0;
-}
-
-.overview-title {
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: #333;
-  margin: 0 0 1rem 0;
-}
-
-.overview-divider {
-  height: 1px;
-  background: #e0e0e0;
-  margin-bottom: 2rem;
-}
-
-.overview-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-}
-
-.overview-card {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.overview-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.overview-card .material-icons {
-  font-size: 2rem;
-  color: var(--primary-color);
-}
-
-.card-content h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: #666;
-}
-
-.card-content p {
-  margin: 0.5rem 0 0;
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #333;
-}
-
+.overview-section,
 .scores-section,
 .upcoming-section {
-  background: white;
+  background: var(--surface-color);
   border-radius: 12px;
   padding: 2rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   margin-top: 2rem;
 }
 
+.overview-title,
 .scores-title,
 .upcoming-title {
   font-size: 1.5rem;
@@ -81,9 +24,49 @@
   gap: 0.5rem;
 }
 
-.scores-title .material-icons,
-.upcoming-title .material-icons {
+.overview-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin-bottom: 2rem;
+}
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.overview-card {
+  background: var(--card-background);
+  border-radius: 10px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.overview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.overview-card .material-icons {
+  font-size: 2rem;
   color: var(--primary-color);
+}
+
+.card-content h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.card-content p {
+  margin: 0.5rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-color);
 }
 
 .scores-grid {
@@ -121,17 +104,13 @@
   display: flex;
   align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
+  background: var(--card-background);
   border-radius: 8px;
   gap: 1rem;
 }
 
 .upcoming-item .material-icons {
   color: var(--primary-color);
-}
-
-.upcoming-item-content {
-  flex: 1;
 }
 
 .upcoming-item-content h4 {
@@ -142,7 +121,7 @@
 
 .upcoming-item-content p {
   margin: 0.25rem 0 0;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 

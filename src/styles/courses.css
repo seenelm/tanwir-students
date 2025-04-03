@@ -6,7 +6,7 @@
   max-width: 600px;
   margin: 0 0 2rem;
   padding: 1.5rem;
-  background: white;
+  background: var(--surface-color);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -16,7 +16,7 @@
   width: 100%;
   margin-bottom: 1rem;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
 }
 
@@ -32,7 +32,7 @@
 }
 
 .course-card {
-  background: white;
+  background: var(--surface-color);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -44,8 +44,8 @@
 
 .course-admin-section {
   padding: 1rem;
-  border-top: 1px solid #eee;
-  background: #f9f9f9;
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-color);
 }
 
 .add-student-form {
@@ -56,7 +56,7 @@
 .add-student-form input {
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
 }
 
@@ -86,7 +86,7 @@ button:hover {
 
 .modal-content {
   position: relative;
-  background-color: white;
+  background-color: var(--surface-color);
   margin: 10% auto;
   padding: 20px;
   width: 90%;
@@ -101,13 +101,13 @@ button:hover {
   top: 10px;
   font-size: 24px;
   font-weight: bold;
-  color: #666;
+  color: var(--text-color);
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .close-button:hover {
-  color: #333;
+  color: var(--primary-color);
 }
 
 .modal-body {
@@ -118,7 +118,7 @@ button:hover {
   display: block;
   margin: 2rem auto 0;
   padding: 0.75rem 1.5rem;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 4px;
@@ -128,7 +128,7 @@ button:hover {
 }
 
 .create-course-button:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-hover);
 }
 
 .form-group {
@@ -139,7 +139,7 @@ button:hover {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #333;
+  color: var(--text-color);
 }
 
 .form-actions {
@@ -150,7 +150,7 @@ button:hover {
 
 .primary-button {
   padding: 0.75rem 1.5rem;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 4px;
@@ -160,5 +160,5 @@ button:hover {
 }
 
 .primary-button:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-hover);
 }

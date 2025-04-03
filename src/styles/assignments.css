@@ -17,6 +17,8 @@
 }
 
 .create-assignment-button {
+  display: block;
+  margin: 2rem auto 0;
   padding: 0.75rem 1.5rem;
   background-color: var(--primary-color);
   color: white;
@@ -38,7 +40,7 @@
 }
 
 .assignment-card {
-  background: white;
+  background: var(--surface-color);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -52,7 +54,7 @@
 
 .assignment-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .assignment-header h3 {
@@ -97,7 +99,7 @@
 
 .modal-content {
   position: relative;
-  background-color: white;
+  background-color: var(--surface-color);
   margin: 10% auto;
   padding: 20px;
   width: 90%;
@@ -147,7 +149,7 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
   transition: border-color 0.2s;
@@ -195,7 +197,7 @@
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 1rem;
 }
 
@@ -237,7 +239,7 @@
 }
 
 .meta-info {
-  background: #f8f9fa;
+  background: var(--surface-color);
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1.5rem;
@@ -260,7 +262,7 @@
 .upload-section {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: #f8f9fa;
+  background: var(--surface-color);
   border-radius: 4px;
   display: flex;
   gap: 1rem;
@@ -276,7 +278,7 @@
   display: flex;
   align-items: center;
   padding: 0.75rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   margin-bottom: 0.5rem;
 }
@@ -307,8 +309,8 @@
 }
 
 .question-item {
-  background: white;
-  border: 1px solid #dee2e6;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 1.5rem;
   margin-bottom: 1rem;
@@ -331,7 +333,7 @@
   width: 100%;
   min-height: 100px;
   padding: 0.5rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   margin: 1rem 0;
 }
@@ -339,13 +341,13 @@
 .answer-feedback {
   margin-top: 1rem;
   padding: 0.75rem;
-  background: #f8f9fa;
+  background: var(--surface-color);
   border-radius: 4px;
 }
 
 /* Add Question Form */
 .add-question-form {
-  background: white;
+  background: var(--surface-color);
   padding: 1.5rem;
   border-radius: 4px;
 }
@@ -358,7 +360,7 @@
   width: 100%;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
 }
 
@@ -376,15 +378,15 @@
   width: 100%;
   min-height: 100px;
   padding: 0.75rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   margin-bottom: 1rem;
   resize: vertical;
 }
 
 .discussion-item {
-  background: white;
-  border: 1px solid #dee2e6;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -394,7 +396,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
-  color: #6c757d;
+  color: var(--text-color);
   font-size: 0.875rem;
 }
 
@@ -446,7 +448,7 @@
 
 .cancel-button {
   padding: 0.5rem 1rem;
-  background-color: #6c757d;
+  background-color: var(--text-color);
   color: white;
   border: none;
   border-radius: 4px;
