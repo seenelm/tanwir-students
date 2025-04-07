@@ -19,6 +19,14 @@ export class AssignmentService {
   private static instance: AssignmentService;
   private db = getFirestore();
   private authService: AuthService;
+  // Add cache maps for different data types
+  private attachmentsCache: Map<string, { data: AssignmentAttachment[], timestamp: number }> = new Map();
+  private questionsCache: Map<string, { data: AssignmentQuestion[], timestamp: number }> = new Map();
+  private discussionsCache: Map<string, { data: AssignmentDiscussion[], timestamp: number }> = new Map();
+  private studentAnswersCache: Map<string, { data: StudentAnswer[], timestamp: number }> = new Map();
+  private assignmentsCache: Map<string, { data: Assignment[], timestamp: number }> = new Map();
+  // Cache expiration time in milliseconds (5 minutes)
+  private cacheExpirationTime = 5 * 60 * 1000;
 
   private constructor() {
     this.authService = AuthService.getInstance();
@@ -29,6 +37,49 @@ export class AssignmentService {
       AssignmentService.instance = new AssignmentService();
     }
     return AssignmentService.instance;
+  }
+
+  /**
+   * Clears all caches or a specific cache if specified
+   */
+  public clearCache(type?: 'attachments' | 'questions' | 'discussions' | 'studentAnswers' | 'assignments'): void {
+    if (!type) {
+      this.attachmentsCache.clear();
+      this.questionsCache.clear();
+      this.discussionsCache.clear();
+      this.studentAnswersCache.clear();
+      this.assignmentsCache.clear();
+      return;
+    }
+
+    switch (type) {
+      case 'attachments':
+        this.attachmentsCache.clear();
+        break;
+      case 'questions':
+        this.questionsCache.clear();
+        break;
+      case 'discussions':
+        this.discussionsCache.clear();
+        break;
+      case 'studentAnswers':
+        this.studentAnswersCache.clear();
+        break;
+      case 'assignments':
+        this.assignmentsCache.clear();
+        break;
+    }
+  }
+
+  /**
+   * Checks if cache is valid
+   */
+  private isCacheValid<T>(cache: Map<string, { data: T[], timestamp: number }>, key: string): boolean {
+    const cachedData = cache.get(key);
+    if (!cachedData) return false;
+    
+    const now = Date.now();
+    return (now - cachedData.timestamp) < this.cacheExpirationTime;
   }
 
   /**
@@ -55,6 +106,8 @@ export class AssignmentService {
     };
 
     const docRef = await addDoc(collection(this.db, 'assignments'), assignmentData);
+    // Clear the assignments cache for this course
+    this.assignmentsCache.delete(courseId);
     return docRef.id;
   }
 
@@ -62,18 +115,28 @@ export class AssignmentService {
    * Gets all assignments for a course
    */
   async getCourseAssignments(courseId: string): Promise<Assignment[]> {
+    // Check cache first
+    if (this.isCacheValid(this.assignmentsCache, courseId)) {
+      return this.assignmentsCache.get(courseId)!.data;
+    }
+
     const q = query(
       collection(this.db, 'assignments'),
       where('CourseId', '==', courseId)
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const assignments = querySnapshot.docs.map(doc => ({
       Id: doc.id,
       ...doc.data(),
       DueDate: (doc.data().DueDate as Timestamp).toDate(),
       CreatedAt: (doc.data().CreatedAt as Timestamp).toDate()
     } as Assignment));
+
+    // Store in cache
+    this.assignmentsCache.set(courseId, { data: assignments, timestamp: Date.now() });
+    
+    return assignments;
   }
 
   /**
@@ -182,18 +245,32 @@ export class AssignmentService {
 
     const attachmentRef = collection(this.db, `assignments/${assignmentId}/attachments`);
     const docRef = await addDoc(attachmentRef, attachmentData);
+    
+    // Clear the attachments cache for this assignment
+    this.attachmentsCache.delete(assignmentId);
+    
     return docRef.id;
   }
 
   async getAttachments(assignmentId: string): Promise<AssignmentAttachment[]> {
+    // Check cache first
+    if (this.isCacheValid(this.attachmentsCache, assignmentId)) {
+      return this.attachmentsCache.get(assignmentId)!.data;
+    }
+    
     const attachmentsRef = collection(this.db, `assignments/${assignmentId}/attachments`);
     const snapshot = await getDocs(attachmentsRef);
     
-    return snapshot.docs.map(doc => ({
+    const attachments = snapshot.docs.map(doc => ({
       Id: doc.id,
       ...doc.data(),
       CreatedAt: doc.data().CreatedAt?.toDate()
     } as AssignmentAttachment));
+    
+    // Store in cache
+    this.attachmentsCache.set(assignmentId, { data: attachments, timestamp: Date.now() });
+    
+    return attachments;
   }
 
   /**
@@ -213,18 +290,32 @@ export class AssignmentService {
 
     const questionsRef = collection(this.db, `assignments/${assignmentId}/questions`);
     const docRef = await addDoc(questionsRef, questionData);
+    
+    // Clear the questions cache for this assignment
+    this.questionsCache.delete(assignmentId);
+    
     return docRef.id;
   }
 
   async getQuestions(assignmentId: string): Promise<AssignmentQuestion[]> {
+    // Check cache first
+    if (this.isCacheValid(this.questionsCache, assignmentId)) {
+      return this.questionsCache.get(assignmentId)!.data;
+    }
+    
     const questionsRef = collection(this.db, `assignments/${assignmentId}/questions`);
     const snapshot = await getDocs(questionsRef);
     
-    return snapshot.docs.map(doc => ({
+    const questions = snapshot.docs.map(doc => ({
       Id: doc.id,
       ...doc.data(),
       CreatedAt: doc.data().CreatedAt?.toDate()
     } as AssignmentQuestion));
+    
+    // Store in cache
+    this.questionsCache.set(assignmentId, { data: questions, timestamp: Date.now() });
+    
+    return questions;
   }
 
   /**
@@ -246,6 +337,11 @@ export class AssignmentService {
 
     const answersRef = collection(this.db, `assignments/${assignmentId}/studentAnswers`);
     const docRef = await addDoc(answersRef, answerData);
+    
+    // Clear the student answers cache for this assignment
+    const cacheKey = `${assignmentId}_${user.uid}`;
+    this.studentAnswersCache.delete(cacheKey);
+    
     return docRef.id;
   }
 
@@ -257,19 +353,31 @@ export class AssignmentService {
     if (userRole !== 'admin' && (!studentId || studentId !== user.uid)) {
       throw new Error('Students can only view their own answers');
     }
+    
+    // Use the current user's ID if studentId is not provided
+    const targetStudentId = studentId || user.uid;
+    const cacheKey = `${assignmentId}_${targetStudentId}`;
+    
+    // Check cache first
+    if (this.isCacheValid(this.studentAnswersCache, cacheKey)) {
+      return this.studentAnswersCache.get(cacheKey)!.data;
+    }
 
     const answersRef = collection(this.db, `assignments/${assignmentId}/studentAnswers`);
-    const q = studentId 
-      ? query(answersRef, where('StudentId', '==', studentId))
-      : answersRef;
+    const q = query(answersRef, where('StudentId', '==', targetStudentId));
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    const answers = snapshot.docs.map(doc => ({
       Id: doc.id,
       ...doc.data(),
       SubmittedAt: doc.data().SubmittedAt?.toDate(),
       GradedAt: doc.data().GradedAt?.toDate()
     } as StudentAnswer));
+    
+    // Store in cache
+    this.studentAnswersCache.set(cacheKey, { data: answers, timestamp: Date.now() });
+    
+    return answers;
   }
 
   async gradeAnswer(assignmentId: string, answerId: string, score: number): Promise<void> {
@@ -285,6 +393,13 @@ export class AssignmentService {
       GradedBy: user.uid,
       GradedAt: serverTimestamp()
     });
+    
+    // Clear all student answers caches for this assignment
+    for (const key of Array.from(this.studentAnswersCache.keys())) {
+      if (key.startsWith(`${assignmentId}_`)) {
+        this.studentAnswersCache.delete(key);
+      }
+    }
   }
 
   /**
@@ -302,20 +417,34 @@ export class AssignmentService {
 
     const discussionsRef = collection(this.db, `assignments/${assignmentId}/discussions`);
     const docRef = await addDoc(discussionsRef, discussionData);
+    
+    // Clear the discussions cache for this assignment
+    this.discussionsCache.delete(assignmentId);
+    
     return docRef.id;
   }
 
   async getDiscussions(assignmentId: string): Promise<AssignmentDiscussion[]> {
+    // Check cache first
+    if (this.isCacheValid(this.discussionsCache, assignmentId)) {
+      return this.discussionsCache.get(assignmentId)!.data;
+    }
+    
     const discussionsRef = collection(this.db, `assignments/${assignmentId}/discussions`);
     const q = query(discussionsRef, orderBy('CreatedAt', 'asc'));
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    const discussions = snapshot.docs.map(doc => ({
       Id: doc.id,
       ...doc.data(),
       CreatedAt: doc.data().CreatedAt?.toDate(),
       UpdatedAt: doc.data().UpdatedAt?.toDate()
     } as AssignmentDiscussion));
+    
+    // Store in cache
+    this.discussionsCache.set(assignmentId, { data: discussions, timestamp: Date.now() });
+    
+    return discussions;
   }
 
   async updateDiscussion(assignmentId: string, discussionId: string, content: string): Promise<void> {
@@ -332,5 +461,8 @@ export class AssignmentService {
       Content: content,
       UpdatedAt: serverTimestamp()
     });
+    
+    // Clear the discussions cache for this assignment
+    this.discussionsCache.delete(assignmentId);
   }
 }
