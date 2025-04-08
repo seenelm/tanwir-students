@@ -41,6 +41,12 @@ export class Videos {
           Name: 'PG: Foundations 24/25',
           Description: 'Foundation classes for the 2024-25 academic year',
           Videos: []
+        },
+        {
+          Id: 'PLQ5POsRxrza15-sldnWjtmWvqEohvY7aD',
+          Name: 'Extended Studies',
+          Description: 'Extended studies classes and additional materials',
+          Videos: []
         }
       ];
       

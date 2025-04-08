@@ -1,7 +1,7 @@
 import '../styles/main.css';
 import { Courses } from './Courses';
 import { Home } from './Home';
-import { Assignments } from './Assignments';
+import { StudentAssignments } from './StudentAssignments';
 import { Videos } from './Videos';
 
 export class Content {
@@ -35,8 +35,8 @@ export class Content {
         const home = new Home();
         return home.render();
       case '/assignments':
-        const assignments = new Assignments();
-        return assignments.render();
+        const assignments = new StudentAssignments();
+        return assignments.getElement();
       case '/videos':
         const videos = new Videos();
         return videos.getElement();
