@@ -89,12 +89,22 @@ export class Assignments {
       }
     });
 
+    // Handle escape key to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.modal && this.modal.style.display === 'block') {
+        this.closeModal();
+      }
+    });
+
     return modal;
   }
 
   private closeModal(): void {
     if (this.modal) {
       this.modal.style.display = 'none';
+      
+      // Re-enable body scrolling
+      document.body.style.overflow = '';
       
       // Clean up any event listeners on tabs to prevent duplicates
       const tabsElement = this.modal.querySelector('.tabs');
@@ -186,6 +196,8 @@ export class Assignments {
       modalBody.appendChild(this.createAssignmentForm());
     }
 
+    // Disable body scrolling when modal is open
+    document.body.style.overflow = 'hidden';
     this.modal.style.display = 'block';
   }
 
@@ -301,6 +313,8 @@ export class Assignments {
       }
     });
 
+    // Disable body scrolling when modal is open
+    document.body.style.overflow = 'hidden';
     this.modal.style.display = 'block';
   }
 

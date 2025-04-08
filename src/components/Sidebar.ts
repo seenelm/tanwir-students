@@ -23,6 +23,7 @@ export class Sidebar {
     { path: '/home', title: 'Home', icon: 'home' },
     { path: '/assignments', title: 'Assignments', icon: 'assignment' },
     { path: '/courses', title: 'Courses', icon: 'school' },
+    { path: '/videos', title: 'Videos', icon: 'play_circle' },
     { path: '/settings', title: 'Settings', icon: 'settings' },
   ];
 

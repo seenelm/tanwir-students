@@ -2,6 +2,7 @@ import '../styles/main.css';
 import { Courses } from './Courses';
 import { Home } from './Home';
 import { Assignments } from './Assignments';
+import { Videos } from './Videos';
 
 export class Content {
   private readonly CLASS_NAMES = {
@@ -36,6 +37,9 @@ export class Content {
       case '/assignments':
         const assignments = new Assignments();
         return assignments.render();
+      case '/videos':
+        const videos = new Videos();
+        return videos.getElement();
       case '/settings':
         const settings = document.createElement('div');
         settings.innerHTML = '<h2>Settings</h2><p>Settings panel will be available here.</p>';
