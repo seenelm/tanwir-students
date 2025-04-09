@@ -133,6 +133,36 @@ export class AuthService {
     }
   }
 
+  async getUserIdByName(name: string): Promise<string | null> {
+    try {
+      const usersRef = collection(this.db, 'authorizedUsers');
+      const querySnapshot = await getDocs(usersRef);
+      
+      // Since Firestore doesn't support LIKE queries, we'll fetch all users
+      // and filter them manually
+      const nameLower = name.toLowerCase();
+      
+      for (const doc of querySnapshot.docs) {
+        const userData = doc.data();
+        const firstName = (userData.FirstName || '').toLowerCase();
+        const lastName = (userData.LastName || '').toLowerCase();
+        const fullName = `${firstName} ${lastName}`.toLowerCase();
+        
+        // Check if the search term is in the first name, last name, or full name
+        if (firstName.includes(nameLower) || 
+            lastName.includes(nameLower) || 
+            fullName.includes(nameLower)) {
+          return doc.id;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching user by name:', error);
+      return null;
+    }
+  }
+
   async createAuthorizedUser(user: User, role: UserRole = 'student'): Promise<void> {
     if (!user.uid || !user.email) throw new Error('User must have UID and email');
 

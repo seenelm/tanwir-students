@@ -1,7 +1,3 @@
-// types/assignment.ts
-
-// import { Timestamp } from 'firebase/firestore';
-
 export interface AssignmentRequest {
   courseId?: string;
 }

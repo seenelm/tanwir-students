@@ -30,7 +30,7 @@ export class Content {
     switch (this.currentPath) {
       case '/courses':
         const courses = new Courses();
-        return courses.render();
+        return courses.getElement();
       case '/home':
         const home = new Home();
         return home.render();
