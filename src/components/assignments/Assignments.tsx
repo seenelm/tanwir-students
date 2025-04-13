@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { AssignmentService } from '../services/assignments/service/AssignmentService';
-import { AssignmentCard } from './AssignmentCard'; // Make sure this is a React component now
-import '../styles/assignments.css'; // Optional: move inline styles here
+import { AssignmentService } from '../../services/assignments/service/AssignmentService';
+import { AssignmentCard } from './AssignmentCard';
+
 
 interface Assignment {
   id: number;

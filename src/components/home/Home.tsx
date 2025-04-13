@@ -1,5 +1,4 @@
 import React from 'react';
-import '../styles/home.css';
 
 const CLASS_NAMES = {
   container: 'home-container',

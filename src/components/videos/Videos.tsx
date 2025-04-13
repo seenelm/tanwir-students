@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/videos.css';
+
 
 interface Playlist {
   id: string;

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import '../styles/courses.css';
-import { Course } from '../services/courses/types/course';
-import { CourseService } from '../services/courses/service/CourseService';
+import { Course } from '../../services/courses/types/course';
+import { CourseService } from '../../services/courses/service/CourseService';
 import { CourseCard } from './CourseCard';
 
 export const Courses: React.FC = () => {
@@ -10,7 +9,7 @@ export const Courses: React.FC = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const service = new CourseService();
+        const service = CourseService.getInstance();
         const response = await service.getCourses({});
         setCourses(response.course);
       } catch (error) {

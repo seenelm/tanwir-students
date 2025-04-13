@@ -1,5 +1,4 @@
 import React from 'react';
-import '../styles/card.css';
 
 interface CardProps {
   title: string;
@@ -7,11 +6,22 @@ interface CardProps {
   description?: string;
   footer?: React.ReactNode;
   children?: React.ReactNode;
+  onClick?: () => void;
 }
 
-export const Card: React.FC<CardProps> = ({ title, subtitle, description, footer, children }) => {
+export const Card: React.FC<CardProps> = ({ 
+  title, 
+  subtitle, 
+  description, 
+  footer, 
+  children,
+  onClick 
+}) => {
   return (
-    <div className="card">
+    <div 
+      className={`card ${onClick ? 'card-clickable' : ''}`} 
+      onClick={onClick}
+    >
       <div className="card-header">
         <h3>{title}</h3>
         {subtitle && <h5 className="card-subtitle">{subtitle}</h5>}
