@@ -3,7 +3,7 @@
   background-color: var(--surface-color);
   border-right: 1px solid var(--border-color);
   position: fixed;
-  height: 100vh;
+  height: 100dvh;
   left: 0;
   top: 0;
   z-index: 1000;

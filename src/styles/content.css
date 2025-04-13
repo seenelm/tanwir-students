@@ -2,7 +2,3 @@
   flex: 1;
   margin-left: var(--sidebar-width);
 }
-
-.content {
-  padding: 2rem;
-}

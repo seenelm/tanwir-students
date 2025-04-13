@@ -9,10 +9,10 @@ body {
   line-height: 1.5;
   font-weight: 400;
   color: var(--text-color);
-  background-color: var(--background-color);
+  background-color: var(--background-color); 
 }
 
 .layout {
   display: flex;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
