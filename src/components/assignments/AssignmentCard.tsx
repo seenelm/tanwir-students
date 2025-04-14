@@ -1,23 +1,32 @@
 import React from 'react';
 import { Card } from '../Card';
+import { usePage } from '../../context/PageContext';
 
 interface AssignmentCardProps {
+  id: string;
   title: string;
   course: string;
   description: string;
   dueDate: string;
   totalPoints: number;
-  onClick?: () => void;
 }
 
 export const AssignmentCard: React.FC<AssignmentCardProps> = ({
+  id,
   title,
   course,
   description,
   dueDate,
   totalPoints,
-  onClick,
 }) => {
+  const { setCurrentPage, setBreadcrumbs, setAssignmentId } = usePage();
+  
+  const handleCardClick = () => {
+    setAssignmentId(id);
+    setBreadcrumbs(['Assignments', title]);
+    setCurrentPage('AssignmentDetail');
+  };
+  
   return (
     <Card
       title={title}
@@ -29,11 +38,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           <div>{totalPoints} points</div>
         </>
       }
-    >
-      {/* If you want to make the whole card clickable */}
-      {onClick && (
-        <button onClick={onClick} style={{ display: 'none' }} aria-hidden="true" />
-      )}
-    </Card>
+      onClick={handleCardClick}
+    />
   );
 };

@@ -3,6 +3,7 @@ export interface AssignmentRequest {
 }
 
 export interface Assignment {
+  AssignmentId: string;
   CourseId: string;
   CourseName: string;
   CreatedAt: Date;
@@ -15,4 +16,14 @@ export interface Assignment {
 
 export interface AssignmentResponse {
   assignments: Assignment[];
+}
+
+export interface AssignmentDisplay {
+  id: string;
+  courseId: string;
+  title: string;
+  course: string;
+  description: string;
+  dueDate: string;
+  totalPoints: number;
 }

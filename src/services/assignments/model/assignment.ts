@@ -18,6 +18,7 @@ export const assignmentConverter: FirestoreDataConverter<Assignment> = {
   fromFirestore: (snapshot: QueryDocumentSnapshot): Assignment => {
     const data = snapshot.data();
     return {
+      AssignmentId: snapshot.id,
       CourseId: data.CourseId,
       CourseName: data.CourseName,
       CreatedAt: (data.CreatedAt as Timestamp).toDate(),

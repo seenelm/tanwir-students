@@ -4,6 +4,7 @@ import { Courses } from './courses/Courses';
 import { Assignments } from './assignments/Assignments';
 import { Videos } from './videos/Videos';
 import { CourseDetail } from './courses/CourseDetail';
+import { AssignmentDetail } from './assignments/AssignmentDetail';
 
 interface ContentProps {
   currentPage: string;
@@ -22,6 +23,8 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         return <Videos />;
       case 'coursedetail':
         return <CourseDetail />;
+      case 'assignmentdetail':
+        return <AssignmentDetail />;
       case 'settings':
         return (
           <div>

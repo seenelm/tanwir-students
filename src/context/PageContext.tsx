@@ -6,6 +6,8 @@ interface PageContextType {
   setCurrentPage: (page: string) => void;
   courseId: string | null;
   setCourseId: (id: string | null) => void;
+  assignmentId: string | null;
+  setAssignmentId: (id: string | null) => void;
   breadcrumbs: string[];
   setBreadcrumbs: (breadcrumbs: string[]) => void;
 }
@@ -15,6 +17,8 @@ const PageContext = createContext<PageContextType>({
   setCurrentPage: () => {},
   courseId: null,
   setCourseId: () => {},
+  assignmentId: null,
+  setAssignmentId: () => {},
   breadcrumbs: [],
   setBreadcrumbs: () => {}
 });
@@ -22,6 +26,7 @@ const PageContext = createContext<PageContextType>({
 export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [currentPage, setCurrentPage] = useState('Home');
   const [courseId, setCourseId] = useState<string | null>(null);
+  const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Home']);
 
   const handleSetCurrentPage = (page: string) => {
@@ -44,6 +49,8 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         setCurrentPage: handleSetCurrentPage, 
         courseId, 
         setCourseId,
+        assignmentId,
+        setAssignmentId,
         breadcrumbs,
         setBreadcrumbs
       }}
