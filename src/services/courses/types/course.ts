@@ -1,6 +1,6 @@
 export interface Enrollment {
-  enrolleeId: string;
-  name: string;
+  EnrolleeId: string;
+  Name: string;
 }
 
 export interface CourseRequest {
@@ -19,6 +19,7 @@ export interface Course {
   Enrollments: Enrollment[];
   Level: number;
   Name: string;
+  Syllabus?: string; // Optional syllabus content
 }
 
 export interface CourseResponse {

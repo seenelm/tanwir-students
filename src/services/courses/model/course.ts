@@ -11,6 +11,7 @@ export const courseConverter: FirestoreDataConverter<Course> = {
       Enrollments: course.Enrollments,
       Level: course.Level,
       Name: course.Name,
+      Syllabus: course.Syllabus,
     };
   },
   fromFirestore: (snapshot: QueryDocumentSnapshot): Course => {
@@ -23,6 +24,7 @@ export const courseConverter: FirestoreDataConverter<Course> = {
       Enrollments: data.Enrollments || [],
       Level: data.Level,
       Name: data.Name,
+      Syllabus: data.Syllabus || '',
     };
   }
 };

@@ -56,16 +56,35 @@ export const AssignmentDetail: React.FC = () => {
 
     if (activeTab === 'details' && assignment) {
       return (
-        <div className="details">
-          <div className="meta">
-            <p><strong>Course:</strong> {assignment.CourseName}</p>
-            <p><strong>Created By:</strong> {assignment.CreatedBy}</p>
-            <p><strong>Due:</strong> {new Date(assignment.DueDate).toLocaleString()}</p>
-            <p><strong>Points:</strong> {assignment.Points}</p>
-          </div>
-          <div className="description">
-            <h3>Description</h3>
-            <p>{assignment.Description}</p>
+        <div className="assignment-details">
+          <h3>Assignment Details</h3>
+          <div className="syllabus-content">
+            <div className="overview-section">
+              <h5>About this assignment</h5>
+              <p>{assignment.Description}</p>
+            </div>
+            
+            <div className="overview-section">
+              <h5>Assignment Information</h5>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">Course</span>
+                  <span className="info-value">{assignment.CourseName}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Created By</span>
+                  <span className="info-value">{assignment.CreatedBy}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Due Date</span>
+                  <span className="info-value">{new Date(assignment.DueDate).toLocaleString()}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Points</span>
+                  <span className="info-value">{assignment.Points}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       );

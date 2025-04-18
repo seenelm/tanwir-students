@@ -221,3 +221,344 @@ button:hover {
   margin-bottom: 8px;
   font-size: 1.2rem;
 }
+
+/* Overview section styles */
+.overview-section {
+  margin-bottom: 2rem;
+}
+
+.overview-section:first-child {
+  margin-top: 0;
+}
+
+.overview-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Course overview styles */
+.course-overview {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.course-overview > div {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s ease;
+}
+
+.course-overview h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.course-overview h3::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 1em;
+  background-color: var(--primary-color);
+  margin-right: 0.5rem;
+  border-radius: 2px;
+}
+
+.course-description p,
+.course-instructor p {
+  color: var(--text-color);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.students-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: var(--primary-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.students-list li {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.students-list li:last-child {
+  border-bottom: none;
+}
+
+.students-list li:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.students-list li span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .course-overview {
+    grid-template-columns: 2fr 1fr;
+  }
+  
+  .course-students {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Syllabus styles */
+.course-syllabus {
+  padding: 1rem 0;
+}
+
+.syllabus-content {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-top: 1rem;
+  line-height: 1.5;
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s ease;
+}
+
+.syllabus-content h4 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+.syllabus-content h5 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  /* margin: 1.5rem 0 0.75rem; */
+  color: var(--primary-color);
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.syllabus-content h5::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 1em;
+  background-color: var(--primary-color);
+  margin-right: 0.5rem;
+  border-radius: 2px;
+}
+
+.syllabus-content p {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.syllabus-content p:last-child {
+  margin-bottom: 0;
+}
+
+.syllabus-content ul, 
+.syllabus-content ol {
+  margin-left: 0;
+  margin-bottom: 1.5rem;
+  background-color: var(--primary-light);
+  padding: 1rem 1rem 1rem 2.5rem;
+  border-radius: 8px;
+  list-style-position: outside;
+}
+
+.syllabus-content ul li, 
+.syllabus-content ol li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+.syllabus-content ul li:last-child, 
+.syllabus-content ol li:last-child {
+  margin-bottom: 0;
+}
+
+/* Semester section styles */
+.syllabus-content div > strong {
+  display: block;
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+  color: var(--text-color);
+  font-weight: 600;
+  padding-bottom: 0.25rem;
+}
+
+.syllabus-content div:first-of-type > strong {
+  margin-top: 0;
+}
+
+.syllabus-content div > ul {
+  margin-top: 0.5rem;
+}
+
+/* Error message */
+.error {
+  color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-weight: 500;
+  border: 1px solid rgba(211, 47, 47, 0.3);
+}
+
+.syllabus-content code {
+  background-color: var(--hover-background);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: var(--text-color);
+}
+
+.syllabus-content pre {
+  background-color: var(--card-background);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.syllabus-content a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.syllabus-content a:hover {
+  text-decoration: underline;
+  color: var(--primary-hover);
+}
+
+/* Empty state */
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  margin-top: 1rem;
+  border: 1px dashed var(--border-color);
+}
+
+/* Grades tab styles */
+.grades-table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.grades-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  background-color: var(--surface-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.grades-table th,
+.grades-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.grades-table th {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 500;
+}
+
+.grades-table tr:last-child td {
+  border-bottom: none;
+}
+
+.grades-table tfoot {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Student grades list for admin view */
+.student-grades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.student-grades-item {
+  background-color: var(--surface-color);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.student-header:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.student-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.expand-icon {
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+}
+
+.expand-icon.expanded {
+  transform: rotate(0deg);
+}
+
+/* Loading and empty states */
+.loading,
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Error state */
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #d32f2f;
+  font-weight: 500;
+}
