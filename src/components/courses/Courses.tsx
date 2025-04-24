@@ -3,6 +3,7 @@ import { Course } from '../../services/courses/types/course';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { CourseCard } from './CourseCard';
 import { AuthService, UserRole } from '../../services/auth';
+import confusedImage from '../../assets/confused1.webp';
 
 export const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -66,7 +67,7 @@ export const Courses: React.FC = () => {
           padding: '1rem'
         }}>
           <img 
-            src="/confused1.webp" 
+            src={confusedImage} 
             alt="Confused" 
             style={{
               width: '200px',

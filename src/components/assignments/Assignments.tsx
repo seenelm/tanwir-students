@@ -4,6 +4,7 @@ import { AssignmentDisplay } from '../../services/assignments/types/assignment';
 import { AssignmentCard } from './AssignmentCard';
 import { AuthService, UserRole } from '../../services/auth';
 import { CourseService } from '../../services/courses/service/CourseService';
+import confusedImage from '../../assets/confused.webp';
 
 export const Assignments: React.FC = () => {
   const [assignments, setAssignments] = useState<AssignmentDisplay[]>([]);
@@ -97,7 +98,7 @@ export const Assignments: React.FC = () => {
         padding: '2rem'
       }}>
         <img 
-          src="/confused.webp" 
+          src={confusedImage} 
           alt="Confused" 
           style={{
             width: '200px',
