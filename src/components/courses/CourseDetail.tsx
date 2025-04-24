@@ -43,6 +43,9 @@ export const CourseDetail: React.FC = () => {
   const [allStudentGrades, setAllStudentGrades] = useState<StudentGrades[]>([]);
   const [gradesLoading, setGradesLoading] = useState(false);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string }[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const { courseId } = usePage();
   
   useEffect(() => {
@@ -54,20 +57,38 @@ export const CourseDetail: React.FC = () => {
   
       setLoading(true);
   
-      // First try from cache
-      let fetchedCourse = courseService.getCourseById(courseId);
-  
-      if (!fetchedCourse) {
-        // If not found in cache, fetch all and retry
-        await courseService.getCourses(); // This will fill the cache
-        fetchedCourse = courseService.getCourseById(courseId);
-      }
-  
+      // Get course from cache (which is now maintained by real-time listener)
+      const fetchedCourse = courseService.getCourseById(courseId);
       setCourse(fetchedCourse ?? null);
       
       // Get user role
       const role = await authService.getUserRole();
       setUserRole(role);
+
+      // Check if current user is enrolled
+      const currentUser = authService.getCurrentUser();
+      if (currentUser && fetchedCourse) {
+        const enrolled = courseService.isStudentEnrolled(courseId, currentUser.uid);
+        setIsEnrolled(enrolled);
+      }
+
+      // Fetch available users if admin
+      if (role === 'admin') {
+        try {
+          const users = await authService.getAllUsers();
+          const enrolledUserIds = new Set(fetchedCourse?.Enrollments?.map(e => e.EnrolleeId) || []);
+          const availableUsers = users
+            .filter(user => !enrolledUserIds.has(user.uid))
+            .map(user => ({
+              id: user.uid,
+              name: user.FirstName + ' ' + user.LastName
+            }));
+          console.log('Mapped available users:', availableUsers);
+          setAvailableUsers(availableUsers);
+        } catch (error) {
+          console.error('Error fetching available users:', error);
+        }
+      }
       
       setLoading(false);
     };
@@ -155,6 +176,118 @@ export const CourseDetail: React.FC = () => {
     // Otherwise, open this student and close any others
     setExpandedStudentId(prevId => prevId === studentId ? null : studentId);
   };
+
+  // const handleEnroll = async () => {
+  //   if (!courseId || !course) return;
+
+  //   try {
+  //     const authService = AuthService.getInstance();
+  //     const courseService = CourseService.getInstance();
+  //     const currentUser = authService.getCurrentUser();
+
+  //     if (currentUser) {
+  //       await courseService.enrollStudent(
+  //         courseId,
+  //         currentUser.uid,
+  //         currentUser.displayName || 'Student'
+  //       );
+  //       setIsEnrolled(true);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error enrolling in course:', error);
+  //   }
+  // };
+
+  const handleUnenroll = async () => {
+    if (!courseId || !course) return;
+
+    try {
+      const authService = AuthService.getInstance();
+      const courseService = CourseService.getInstance();
+      const currentUser = authService.getCurrentUser();
+
+      if (currentUser) {
+        await courseService.unenrollStudent(courseId, currentUser.uid);
+        setIsEnrolled(false);
+      }
+    } catch (error) {
+      console.error('Error unenrolling from course:', error);
+    }
+  };
+
+  const handleAdminEnroll = async () => {
+    console.log('Starting handleAdminEnroll');
+    console.log('Selected User ID:', selectedUserId);
+    console.log('Course ID:', courseId);
+    console.log('Course:', course);
+    if (!courseId || !course || !selectedUserId) {
+      console.log('Missing required data:', { courseId, course, selectedUserId });
+      return;
+    }
+
+    try {
+      console.log('Getting course service instance');
+      const courseService = CourseService.getInstance();
+      console.log('Finding selected user in availableUsers:', availableUsers);
+      const selectedUser = availableUsers.find(user => user.id === selectedUserId);
+      console.log('Selected user:', selectedUser);
+      
+      if (selectedUser) {
+        console.log('Attempting to enroll student');
+        await courseService.enrollStudent(
+          courseId,
+          selectedUser.id,
+          selectedUser.name
+        );
+        console.log('Student enrolled successfully');
+        setSelectedUserId(''); // Reset selection
+        
+        // Refresh course data and available users
+        console.log('Refreshing course data');
+        const fetchedCourse = courseService.getCourseById(courseId);
+        setCourse(fetchedCourse ?? null);
+        
+        const users = await AuthService.getInstance().getAllUsers();
+        const enrolledUserIds = new Set(fetchedCourse?.Enrollments?.map(e => e.EnrolleeId) || []);
+        const updatedAvailableUsers = users
+          .filter(user => !enrolledUserIds.has(user.uid))
+          .map(user => ({
+            id: user.uid,
+            name: user.FirstName + ' ' + user.LastName
+          }));
+        setAvailableUsers(updatedAvailableUsers);
+      } else {
+        console.log('Selected user not found in availableUsers');
+      }
+    } catch (error) {
+      console.error('Error in handleAdminEnroll:', error);
+    }
+  };
+
+  const handleAdminUnenroll = async (studentId: string) => {
+    if (!courseId || !course) return;
+
+    try {
+      const courseService = CourseService.getInstance();
+      await courseService.unenrollStudent(courseId, studentId);
+      
+      // Refresh course data and available users
+      const fetchedCourse = courseService.getCourseById(courseId);
+      setCourse(fetchedCourse ?? null);
+      
+      const users = await AuthService.getInstance().getAllUsers();
+      const enrolledUserIds = new Set(fetchedCourse?.Enrollments?.map(e => e.EnrolleeId) || []);
+      const updatedAvailableUsers = users
+        .filter(user => !enrolledUserIds.has(user.uid))
+        .map(user => ({
+          id: user.uid,
+          name: user.FirstName + ' ' + user.LastName
+        }));
+      setAvailableUsers(updatedAvailableUsers);
+    } catch (error) {
+      console.error('Error unenrolling student:', error);
+    }
+  };
   
   const renderContent = () => {
     if (activeTab === 'overview' && course) {
@@ -172,18 +305,82 @@ export const CourseDetail: React.FC = () => {
           
           <div className="course-students">
             <h3>Enrolled Students</h3>
+            {userRole === 'admin' && (
+              <div className="admin-enrollment-section">
+                <div className="enrollment-controls" style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  width: '100%',
+                  maxWidth: '100%'
+                }}>
+                  <select 
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="user-select"
+                    style={{
+                      backgroundColor: 'var(--background-color)',
+                      color: 'var(--text-color)',
+                      border: '1px solid var(--border-color)',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      width: '100%',
+                      maxWidth: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="">Select a student to enroll</option>
+                    {availableUsers.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button 
+                    className="enroll-button"
+                    onClick={handleAdminEnroll}
+                    disabled={!selectedUserId}
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    Enroll Student
+                  </button>
+                </div>
+              </div>
+            )}
+            {userRole === 'student' && isEnrolled && (
+              <div className="enrollment-actions">
+                <button 
+                  className="unenroll-button"
+                  onClick={handleUnenroll}
+                >
+                  Unenroll from Course
+                </button>
+              </div>
+            )}
             {course.Enrollments && course.Enrollments.length > 0 ? (
               <ul className="students-list">
-                {course.Enrollments.map((enrollment, index) => {
-                  return (
-                    <li key={index}>
+                {course.Enrollments.map((enrollment, index) => (
+                  <li key={index} className="student-item">
+                    <span className="student-name">
                       {enrollment.Name || `Student ${index + 1}`}
                       <span style={{ fontSize: '0.8em', color: 'gray', marginLeft: '5px' }}>
                         (ID: {enrollment.EnrolleeId || 'unknown'})
                       </span>
-                    </li>
-                  );
-                })}
+                    </span>
+                    {userRole === 'admin' && (
+                      <button 
+                        className="unenroll-button"
+                        onClick={() => handleAdminUnenroll(enrollment.EnrolleeId)}
+                      >
+                        Unenroll
+                      </button>
+                    )}
+                  </li>
+                ))}
               </ul>
             ) : (
               <p className="empty">No students enrolled yet.</p>

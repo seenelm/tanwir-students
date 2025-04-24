@@ -2,19 +2,53 @@ import React, { useEffect, useState } from 'react';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { AssignmentDisplay } from '../../services/assignments/types/assignment';
 import { AssignmentCard } from './AssignmentCard';
+import { AuthService, UserRole } from '../../services/auth';
+import { CourseService } from '../../services/courses/service/CourseService';
 
 export const Assignments: React.FC = () => {
   const [assignments, setAssignments] = useState<AssignmentDisplay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
-    const fetchAssignments = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const service = AssignmentService.getInstance();
-        const assignmentSummaries = await service.getAssignments();
+        const authService = AuthService.getInstance();
+        const courseService = CourseService.getInstance();
+        const assignmentService = AssignmentService.getInstance();
+
+        // Get user role
+        const role = await authService.getUserRole();
+        setUserRole(role);
+
+        // Get assignments
+        const assignmentSummaries = await assignmentService.getAssignments();
         
-        const formattedAssignments = assignmentSummaries.map(summary => ({
+        // Filter assignments based on role
+        let filteredAssignments = assignmentSummaries;
+        if (role === 'student') {
+          // Get all courses and filter for enrolled ones
+          const courses = await courseService.getCourses();
+          const currentUser = authService.getCurrentUser();
+          
+          if (currentUser) {
+            const enrolledIds = courses.course
+              .filter(course => 
+                course.Enrollments.some(enrollment => 
+                  enrollment.EnrolleeId === currentUser.uid
+                )
+              )
+              .map(course => course.Id);
+            
+            // Filter assignments for enrolled courses
+            filteredAssignments = assignmentSummaries.filter(summary => 
+              enrolledIds.includes(summary.CourseId)
+            );
+          }
+        }
+        
+        const formattedAssignments = filteredAssignments.map(summary => ({
           id: summary.AssignmentId,
           title: summary.Title,
           courseId: summary.CourseId,
@@ -32,8 +66,8 @@ export const Assignments: React.FC = () => {
       }
     };
 
-    fetchAssignments();
-  }, []);
+    fetchData();
+  }, []); // Empty dependency array since we only want to fetch once on mount
 
   const groupByCourse = (assignments: AssignmentDisplay[]): Record<string, AssignmentDisplay[]> => {
     return assignments.reduce((groups: Record<string, AssignmentDisplay[]>, assignment) => {
@@ -52,7 +86,36 @@ export const Assignments: React.FC = () => {
   }
 
   if (assignments.length === 0) {
-    return <div className="no-assignments">No assignments found</div>;
+    return (
+      <div className="no-assignments" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60vh',
+        textAlign: 'center',
+        padding: '2rem'
+      }}>
+        <img 
+          src="/confused.webp" 
+          alt="Confused" 
+          style={{
+            width: '200px',
+            height: 'auto',
+            marginBottom: '1rem'
+          }}
+        />
+        <p style={{
+          fontSize: '1.2rem',
+          color: 'var(--text-secondary)',
+          marginTop: '1rem'
+        }}>
+          {userRole === 'student' 
+            ? 'No assignments found for your enrolled courses'
+            : 'No assignments found'}
+        </p>
+      </div>
+    );
   }
 
   return (

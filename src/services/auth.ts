@@ -11,6 +11,7 @@ import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, F
 export type UserRole = 'student' | 'admin';
 
 export interface AuthorizedUser {
+  uid: string;
   CreatedAt: Date;
   FirstName: string;
   LastName: string;
@@ -163,10 +164,22 @@ export class AuthService {
     }
   }
 
+  async getAllUsers(): Promise<AuthorizedUser[]> {
+    const usersRef = collection(this.db, 'authorizedUsers');
+    const querySnapshot = await getDocs(usersRef);
+    const users = querySnapshot.docs.map(doc => ({
+      ...doc.data() as AuthorizedUser,
+      uid: doc.id  // Set the uid from the document ID
+    }));
+    console.log('Fetched users with document IDs:', users);
+    return users;
+  }
+
   async createAuthorizedUser(user: User, role: UserRole = 'student'): Promise<void> {
     if (!user.uid || !user.email) throw new Error('User must have UID and email');
 
     const userData: AuthorizedUser = {
+      uid: user.uid,
       CreatedAt: new Date(),
       FirstName: user.displayName?.split(' ')[0] || '',
       LastName: user.displayName?.split(' ')[1] || '',

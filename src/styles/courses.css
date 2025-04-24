@@ -562,3 +562,66 @@ button:hover {
   color: #d32f2f;
   font-weight: 500;
 }
+
+.enrollment-actions {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.enroll-button,
+.unenroll-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.enroll-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.enroll-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.unenroll-button {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.unenroll-button:hover {
+  background-color: var(--error-dark);
+}
+
+.admin-enrollment-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.enrollment-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.user-select {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: white;
+  font-size: 1rem;
+}
+
+.user-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
+}
