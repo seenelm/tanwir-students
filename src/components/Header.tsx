@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePage } from '../context/PageContext';
+import { AuthService } from '../services/auth';
 
 interface HeaderProps {
   currentPage: string;
@@ -8,6 +9,21 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) => {
   const { breadcrumbs, setCurrentPage } = usePage();
+  const [user, setUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const authService = AuthService.getInstance();
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+  }, []);
+  
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  };
   
   const handleBreadcrumbClick = (index: number) => {
     // If clicking on the first breadcrumb (e.g., "Courses")
@@ -37,10 +53,18 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
           <h1 className="header-title">{currentPage}</h1>
         )}
       </div>
-      <div className="header-actions">
+      <div className="header-right">
         <button className="menu-toggle" aria-label="Toggle Menu" onClick={onToggleSidebar}>
           <span className="material-icons">menu</span>
         </button>
+        {user && (
+          <div className="user-profile">
+            <div className="user-initials">
+              {user.displayName ? getInitials(user.displayName) : '?'}
+            </div>
+            <span className="user-name">{user.displayName || 'User'}</span>
+          </div>
+        )}
       </div>
     </header>
   );
