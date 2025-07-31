@@ -10,10 +10,11 @@ type Route = {
 
 const routes: Route[] = [
   { path: '/home', title: 'Home', icon: 'home' },
-  { path: '/assignments', title: 'Assignments', icon: 'assignment' },
-  { path: '/courses', title: 'Courses', icon: 'school' },
-  { path: '/videos', title: 'Videos', icon: 'play_circle' },
-  { path: '/settings', title: 'Settings', icon: 'settings' },
+  // Temporarily hidden tabs
+  // { path: '/assignments', title: 'Assignments', icon: 'assignment' },
+  // { path: '/courses', title: 'Courses', icon: 'school' },
+  // { path: '/videos', title: 'Videos', icon: 'play_circle' },
+  // { path: '/settings', title: 'Settings', icon: 'settings' },
 ];
 
 const CLASS_NAMES = {

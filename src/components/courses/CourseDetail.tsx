@@ -177,26 +177,6 @@ export const CourseDetail: React.FC = () => {
     setExpandedStudentId(prevId => prevId === studentId ? null : studentId);
   };
 
-  // const handleEnroll = async () => {
-  //   if (!courseId || !course) return;
-
-  //   try {
-  //     const authService = AuthService.getInstance();
-  //     const courseService = CourseService.getInstance();
-  //     const currentUser = authService.getCurrentUser();
-
-  //     if (currentUser) {
-  //       await courseService.enrollStudent(
-  //         courseId,
-  //         currentUser.uid,
-  //         currentUser.displayName || 'Student'
-  //       );
-  //       setIsEnrolled(true);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error enrolling in course:', error);
-  //   }
-  // };
 
   const handleUnenroll = async () => {
     if (!courseId || !course) return;

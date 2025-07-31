@@ -6,7 +6,7 @@ import {
   User
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, Firestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, Firestore, deleteDoc } from 'firebase/firestore';
 
 export type UserRole = 'student' | 'admin';
 
@@ -16,6 +16,7 @@ export interface AuthorizedUser {
   FirstName: string;
   LastName: string;
   Role: UserRole;
+  email?: string; 
 }
 
 export class AuthService {
@@ -51,17 +52,43 @@ export class AuthService {
         displayName: result.user.displayName
       });
       
-      // Check if user exists in authorizedUsers
-      const userDoc = await getDoc(doc(this.db, 'authorizedUsers', result.user.uid));
-      
-      // If user doesn't exist, create them as a student
-      if (!userDoc.exists()) {
-        console.log('Creating new authorized user with student role');
-        await this.createAuthorizedUser(result.user, 'student');
-        return result.user;
+      if (!result.user.email) {
+        console.error('User email is missing from Google auth result');
+        await this.signOut();
+        throw new Error('User email is required for authentication');
       }
       
-      // For existing users, check their authorization
+      const existingUser = await this.findUserByEmail(result.user.email);
+      
+      if (existingUser) {
+        const { id: oldId, data } = existingUser;
+      
+        if (oldId !== result.user.uid) {
+          console.log(`Migrating Firestore user from ${oldId} to ${result.user.uid}`);
+      
+          // Prepare merged data
+          const newData = {
+            ...data,
+            uid: result.user.uid,
+            email: result.user.email,
+            Role: 'student'
+          };
+      
+          // Copy to new doc
+          await setDoc(doc(this.db, 'authorizedUsers', result.user.uid), newData);
+      
+          // Delete old doc
+          await deleteDoc(doc(this.db, 'authorizedUsers', oldId));
+      
+          console.log('Migration complete');
+        }
+      } else {
+        console.log('Creating new authorized user with student role');
+        await this.createAuthorizedUser(result.user, 'student');
+      }
+      
+      const userDoc = await getDoc(doc(this.db, 'authorizedUsers', result.user.uid));
+      
       const isAuthorized = userDoc.exists();
       console.log('User authorization check result:', isAuthorized);
       
@@ -139,8 +166,6 @@ export class AuthService {
       const usersRef = collection(this.db, 'authorizedUsers');
       const querySnapshot = await getDocs(usersRef);
       
-      // Since Firestore doesn't support LIKE queries, we'll fetch all users
-      // and filter them manually
       const nameLower = name.toLowerCase();
       
       for (const doc of querySnapshot.docs) {
@@ -149,7 +174,6 @@ export class AuthService {
         const lastName = (userData.LastName || '').toLowerCase();
         const fullName = `${firstName} ${lastName}`.toLowerCase();
         
-        // Check if the search term is in the first name, last name, or full name
         if (firstName.includes(nameLower) || 
             lastName.includes(nameLower) || 
             fullName.includes(nameLower)) {
@@ -169,7 +193,7 @@ export class AuthService {
     const querySnapshot = await getDocs(usersRef);
     const users = querySnapshot.docs.map(doc => ({
       ...doc.data() as AuthorizedUser,
-      uid: doc.id  // Set the uid from the document ID
+      uid: doc.id  
     }));
     console.log('Fetched users with document IDs:', users);
     return users;
@@ -201,5 +225,35 @@ export class AuthService {
     
     const userData = await this.getUserData(user.uid);
     return userData?.Role || null;
+  }
+
+  async findUserByEmail(email: string): Promise<{ id: string, data: AuthorizedUser } | null> {
+    try {
+      const usersRef = collection(this.db, 'authorizedUsers');
+      
+      // Try both email and customerEmail fields since we don't know which one is used
+      const emailQuery = query(usersRef, where('email', '==', email));
+      const customerEmailQuery = query(usersRef, where('customerEmail', '==', email));
+      
+      // Check both queries
+      let querySnapshot = await getDocs(emailQuery);
+      
+      if (querySnapshot.empty) {
+        // If no results with 'email', try 'customerEmail'
+        querySnapshot = await getDocs(customerEmailQuery);
+      }
+      
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return {
+          id: doc.id,
+          data: doc.data() as AuthorizedUser
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error finding user by email:', error);
+      return null;
+    }
   }
 }

@@ -2,6 +2,148 @@
   padding: 2rem;
 }
 
+/* Course enrollment styles */
+.course-enrollment-status {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.enrolled-status {
+  display: flex;
+  align-items: center;
+  color: var(--success-color, #28a745);
+  font-weight: 500;
+}
+
+.status-indicator.enrolled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: var(--success-color, #28a745);
+  color: white;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.enroll-button {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  align-self: flex-start;
+}
+
+.enroll-button:hover {
+  background-color: var(--primary-hover, #0069d9);
+  transform: translateY(-1px);
+}
+
+.enroll-button:active {
+  transform: translateY(0);
+}
+
+.enroll-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Purchase button styles */
+.purchase-button {
+  background-color: var(--success-color, #28a745);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  align-self: flex-start;
+}
+
+.purchase-button:hover {
+  background-color: var(--success-hover, #218838);
+  transform: translateY(-1px);
+}
+
+.purchase-button:active {
+  transform: translateY(0);
+}
+
+/* Course price styles */
+.course-price {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+/* Course variations styles */
+.course-variations {
+  margin: 0.75rem 0;
+}
+
+.variation-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.variation-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Course event information styles */
+.course-event-info {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  background-color: rgba(var(--primary-rgb, 0, 123, 255), 0.05);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.course-dates, .course-location {
+  margin-bottom: 0.25rem;
+}
+
+.date-label, .location-label {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.enrollment-message {
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.enrollment-message.success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--success-color, #28a745);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.enrollment-message.error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--danger-color, #dc3545);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
 .course-form {
   max-width: 600px;
   margin: 0 0 2rem;
