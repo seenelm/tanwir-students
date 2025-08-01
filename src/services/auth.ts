@@ -54,7 +54,21 @@ export class AuthService {
         throw new Error('Google account missing email.');
       }
   
-      const existingUser = await this.findUserByEmail(user.email);
+      
+      // First try by UID
+      let existingUserDoc = await getDoc(doc(this.db, 'authorizedUsers', user.uid));
+
+      let existingUser: { id: string; data: AuthorizedUser } | null = null;
+
+      if (existingUserDoc.exists()) {
+        existingUser = {
+          id: existingUserDoc.id,
+          data: existingUserDoc.data() as AuthorizedUser
+        };
+      } else {
+        existingUser = await this.findUserByEmail(user.email);
+      }
+
       if (!existingUser) {
         await this.signOut();
         throw new Error('Unauthorized user. Please contact an administrator.');
