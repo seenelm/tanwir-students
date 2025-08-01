@@ -62,7 +62,7 @@ export class AuthService {
   
       // Check if the user's Firebase Auth UID matches their document ID in authorizedUsers
       if (existingUser.id !== user.uid) {
-        console.log('⚠️ User document ID does not match Firebase Auth UID. Linking accounts...');
+        console.log('⚠️ User document ID does not match Firebase Auth UID. Updating...');
         
         try {
           // Copy the existing user data to a new document with the Firebase Auth UID
@@ -71,12 +71,12 @@ export class AuthService {
             uid: user.uid // Update the UID field to match Firebase Auth UID
           });
           
-          // We don't delete the old document for Google sign-in to maintain the link
-          // This allows both authentication methods to work with the same user data
+          // Delete the old document to match email/password authentication behavior
+          await deleteDoc(doc(this.db, 'authorizedUsers', existingUser.id));
           
-          console.log('✅ Linked Google account to existing user data');
+          console.log('✅ Updated user document ID to match Firebase Auth UID');
         } catch (updateError) {
-          console.error('Failed to link Google account:', updateError);
+          console.error('Failed to update user document ID:', updateError);
           // Continue with sign-in even if the update fails
         }
       }
