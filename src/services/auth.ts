@@ -72,7 +72,7 @@ export class AuthService {
           });
           
           // Delete the old document to match email/password authentication behavior
-          await deleteDoc(doc(this.db, 'authorizedUsers', existingUser.id));
+          await deleteDoc(doc(this.db, 'authorizedUsers', user.email));
           
           console.log('✅ Updated user document ID to match Firebase Auth UID');
         } catch (updateError) {
@@ -281,17 +281,9 @@ export class AuthService {
     try {
       const usersRef = collection(this.db, 'authorizedUsers');
       
-      // Try both email and customerEmail fields since we don't know which one is used
+      // Check for documents with matching email field
       const emailQuery = query(usersRef, where('email', '==', email));
-      const customerEmailQuery = query(usersRef, where('customerEmail', '==', email));
-      
-      // Check both queries
       let querySnapshot = await getDocs(emailQuery);
-      
-      if (querySnapshot.empty) {
-        // If no results with 'email', try 'customerEmail'
-        querySnapshot = await getDocs(customerEmailQuery);
-      }
       
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
@@ -300,6 +292,24 @@ export class AuthService {
           data: doc.data() as AuthorizedUser
         };
       }
+      
+      // If not found by email field, check if any document ID matches the email
+      try {
+        const docRef = doc(this.db, 'authorizedUsers', email);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          console.log('✅ Found user by document ID matching email');
+          return {
+            id: docSnap.id,
+            data: docSnap.data() as AuthorizedUser
+          };
+        }
+      } catch (docError) {
+        console.warn('Error checking document by ID:', docError);
+        // Continue to return null
+      }
+      
       return null;
     } catch (error) {
       console.error('Error finding user by email:', error);
