@@ -3,7 +3,10 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
-  User
+  User,
+  signInWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
+  linkWithCredential
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, Firestore, deleteDoc } from 'firebase/firestore';
@@ -16,7 +19,8 @@ export interface AuthorizedUser {
   FirstName: string;
   LastName: string;
   Role: UserRole;
-  email?: string; 
+  email?: string;
+  password?: string;
 }
 
 export class AuthService {
@@ -41,76 +45,122 @@ export class AuthService {
   async signInWithGoogle(): Promise<User | null> {
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
+      provider.setCustomParameters({ prompt: 'select_account' });
       const result = await signInWithPopup(auth, provider);
-      
-      console.log('Google sign in successful:', {
-        uid: result.user.uid,
-        email: result.user.email,
-        displayName: result.user.displayName
-      });
-      
-      if (!result.user.email) {
-        console.error('User email is missing from Google auth result');
+      const user = result.user;
+  
+      if (!user.email) {
         await this.signOut();
-        throw new Error('User email is required for authentication');
+        throw new Error('Google account missing email.');
       }
-      
-      const existingUser = await this.findUserByEmail(result.user.email);
-      
-      if (existingUser) {
-        const { id: oldId, data } = existingUser;
-      
-        if (oldId !== result.user.uid) {
-          console.log(`Migrating Firestore user from ${oldId} to ${result.user.uid}`);
-      
-          // Prepare merged data
-          const newData = {
-            ...data,
-            uid: result.user.uid,
-            email: result.user.email,
-            Role: 'student'
-          };
-      
-          // Copy to new doc
-          await setDoc(doc(this.db, 'authorizedUsers', result.user.uid), newData);
-      
-          // Delete old doc
-          await deleteDoc(doc(this.db, 'authorizedUsers', oldId));
-      
-          console.log('Migration complete');
+  
+      const existingUser = await this.findUserByEmail(user.email);
+      if (!existingUser) {
+        await this.signOut();
+        throw new Error('Unauthorized user. Please contact an administrator.');
+      }
+  
+      // Check if the user's Firebase Auth UID matches their document ID in authorizedUsers
+      if (existingUser.id !== user.uid) {
+        console.log('⚠️ User document ID does not match Firebase Auth UID. Linking accounts...');
+        
+        try {
+          // Copy the existing user data to a new document with the Firebase Auth UID
+          await setDoc(doc(this.db, 'authorizedUsers', user.uid), {
+            ...existingUser.data,
+            uid: user.uid // Update the UID field to match Firebase Auth UID
+          });
+          
+          // We don't delete the old document for Google sign-in to maintain the link
+          // This allows both authentication methods to work with the same user data
+          
+          console.log('✅ Linked Google account to existing user data');
+        } catch (updateError) {
+          console.error('Failed to link Google account:', updateError);
+          // Continue with sign-in even if the update fails
         }
-      } else {
-        console.log('Creating new authorized user with student role');
-        await this.createAuthorizedUser(result.user, 'student');
       }
-      
-      const userDoc = await getDoc(doc(this.db, 'authorizedUsers', result.user.uid));
-      
-      const isAuthorized = userDoc.exists();
-      console.log('User authorization check result:', isAuthorized);
-      
-      if (!isAuthorized) {
-        console.log('User not authorized, signing out');
-        await this.signOut();
-        throw new Error('Unauthorized user. Access denied.');
+  
+      // Check if current Firebase Auth user has a different sign-in method
+      const methods = await fetchSignInMethodsForEmail(auth, user.email);
+      if (methods.includes('password') && !methods.includes('google.com')) {
+        // Already registered with email/password, try linking
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential) {
+          try {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+              await linkWithCredential(currentUser, credential);
+              console.log('🔗 Linked Google to existing email/password account');
+            }
+          } catch (linkError) {
+            console.warn('Failed to link Google account:', linkError);
+          }
+        }
       }
-      
-      return result.user;
+  
+      return user;
     } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      if (error.code === 'auth/popup-closed-by-user') {
-        console.log('User closed the popup window');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        console.log('Another popup is already open');
-      } else {
-        console.error('Authentication error:', error.message);
-      }
+      console.error('Google sign-in error:', error.message);
       throw error;
     }
   }
+  
+  
+
+  async signInWithEmailPassword(email: string, password: string): Promise<User | null> {
+    try {
+      // First authenticate with Firebase
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+  
+      console.log('✅ Email/password sign-in success:', {
+        uid: user.uid,
+        email: user.email
+      });
+  
+      // Check if they are authorized in the current user document
+      const userDoc = await getDoc(doc(this.db, 'authorizedUsers', user.uid));
+      
+      if (!userDoc.exists()) {
+        // If not found by UID, try to find by email
+        const existingUser = await this.findUserByEmail(user.email || '');
+        
+        if (!existingUser) {
+          // No matching user found in authorizedUsers collection
+          console.warn('❌ Not an authorized user. Signing out.');
+          await this.signOut();
+          throw new Error('Unauthorized user. Please contact an administrator.');
+        }
+        
+        // Found user by email but with different UID, update the document
+        console.log('⚠️ User document ID does not match Firebase Auth UID. Updating...');
+        
+        try {
+          // Copy the existing user data to a new document with the Firebase Auth UID
+          await setDoc(doc(this.db, 'authorizedUsers', user.uid), {
+            ...existingUser.data,
+            uid: user.uid // Update the UID field to match Firebase Auth UID
+          });
+          
+          // Delete the old document (optional, may want to keep for reference)
+          await deleteDoc(doc(this.db, 'authorizedUsers', existingUser.id));
+          
+          console.log('✅ Updated user document ID to match Firebase Auth UID');
+        } catch (updateError) {
+          console.error('Failed to update user document ID:', updateError);
+          // Continue with sign-in even if the update fails
+        }
+      }
+  
+      return user;
+    } catch (error: any) {
+      console.error('Email/password sign-in failed:', error.message);
+      throw error;
+    }
+  }
+  
+  
 
   async signOut(): Promise<void> {
     try {
