@@ -1,0 +1,599 @@
+/* Scholarships Container */
+.scholarships-container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.scholarships-container h2 {
+  margin-bottom: 1.5rem;
+  color: var(--primary-color, #333);
+  font-size: 1.8rem;
+}
+
+/* Loading and Error States */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.error-message {
+  background-color: var(--error-color);
+  color: var(--text-color);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background-color: var(--success-color);
+  color: var(--text-color);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Filter Controls */
+.filter-controls {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-controls span {
+  margin-right: 1rem;
+  font-weight: 500;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-buttons button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-color, #f5f5f5);
+  color: var(--text-color-secondary, #555);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-buttons button.active {
+  background-color: var(--primary-color, #4a90e2);
+  color: white;
+  border-color: var(--primary-color, #4a90e2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.filter-buttons button:hover:not(.active) {
+  background-color: var(--hover-background, #e8e8e8);
+  border-color: var(--primary-light, #7fb1ed);
+  color: var(--primary-color, #4a90e2);
+}
+
+/* Applications List */
+.applications-list {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  max-width: 100vw;
+  overflow-x: hidden; /* Prevent horizontal scrolling at this level */
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 92vw; /* Limit to viewport width */
+  width: 100%;
+}
+
+.applications-list table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* Ensures table will trigger horizontal scroll on small screens */
+  table-layout: fixed; /* Helps with consistent column widths */
+}
+
+.applications-list th,
+.applications-list td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.applications-list th {
+  background-color: var(--surface-color);
+  font-weight: 600;
+}
+
+.applications-list tr:hover {
+  background-color: var(--hover-background);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.pending {
+  background-color: var(--warning-color);
+  color: #f57f17;
+}
+
+.status-badge.approved {
+  background-color: var(--success-color);
+  color: #2e7d32;
+}
+
+.status-badge.denied {
+  background-color: var(--error-color);
+  color: #c62828;
+}
+
+.status-badge.large {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.view-button {
+  padding: 0.4rem 0.75rem;
+  background-color: var(--primary-color, #333);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.view-button:hover {
+  background-color: var(--primary-dark-color, #222);
+}
+
+.no-applications {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  background-color: var(--surface-color);
+  border-radius: 4px;
+}
+
+/* Status Text */
+.status-text {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-text.pending {
+  color: #f57f17; /* Orange */
+}
+
+.status-text.approved {
+  color: #2e7d32; /* Green */
+}
+
+.status-text.denied {
+  color: #c62828; /* Red */
+}
+
+/* Status Badges - keep for detail view */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.pending {
+  background-color: var(--warning-color);
+  color: #f57f17;
+}
+
+.status-badge.approved {
+  background-color: var(--success-color);
+  color: #2e7d32;
+}
+
+.status-badge.denied {
+  background-color: var(--error-color);
+  color: #c62828;
+}
+
+.status-badge.large {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Scholarship Detail */
+.scholarship-detail {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.detail-content {
+  padding: 1.5rem;
+}
+
+.detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.detail-section h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item label {
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.detail-text {
+  background-color: var(--surface-color);
+  padding: 1rem;
+  border-radius: 4px;
+  white-space: pre-line;
+}
+
+.detail-section textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+
+.approve-button,
+.deny-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.approve-button {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+.approve-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.deny-button {
+  background-color: var(--er-color);
+  color: var(--text-color);
+}
+
+.deny-button:hover {
+  background-color: var(--error-hover);
+}
+
+.approve-button:disabled,
+.deny-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 1.5rem;
+}
+
+.review-info {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+/* Admin Controls */
+.admin-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.test-toggle-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.test-toggle-button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Test Utility */
+.test-utility-container {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.scholarship-test {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scholarship-test h3 {
+  margin-top: 0;
+  color: var(--text-color);
+  font-size: 1.3rem;
+}
+
+.scholarship-test p {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.test-button {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+.test-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.test-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sample-preview {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.sample-preview h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.sample-preview ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.sample-preview li {
+  margin-bottom: 0.5rem;
+}
+
+/* Need Percentage Selector */
+.need-selector {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.need-selector label {
+  font-weight: 500;
+  color: var(--text-secondary, #666666);
+}
+
+.need-selector select {
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #dddddd);
+  background-color: var(--background-color, #ffffff);
+  font-size: 1rem;
+  color: var(--text-color, #333333);
+  width: 100%;
+  max-width: 200px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.need-selector select:focus {
+  outline: none;
+  border-color: var(--primary-color, #4a90e2);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.need-selector select:hover {
+  border-color: var(--primary-color, #4a90e2);
+}
+
+.need-percentage {
+  font-weight: 600;
+  color: var(--primary-color, #4a90e2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .scholarships-container {
+    padding: 1rem;
+  }
+
+  .scholarships-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-controls span {
+    margin-bottom: 0.5rem;
+    margin-right: 0;
+  }
+  
+  .filter-buttons {
+    width: 100%;
+  }
+  
+  .filter-buttons button {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .detail-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .detail-content {
+    padding: 1rem;
+  }
+  
+  .button-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .button-group button {
+    width: 100%;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+  }
+  
+  .admin-controls {
+    margin-bottom: 0.75rem;
+  }
+  
+  .test-utility-container {
+    padding: 1rem;
+  }
+  
+  .scholarship-test h3 {
+    font-size: 1.1rem;
+  }
+  
+  .test-button {
+    width: 100%;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .scholarships-container h2 {
+    font-size: 1.3rem;
+  }
+  
+  .status-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+  }
+  
+  .view-button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}

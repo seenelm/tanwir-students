@@ -10,3 +10,40 @@
 @import './card.css';
 @import './videos.css';
 @import './assignments.css';
+@import './scholarships.css';
+
+/* Loading container */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  width: 100%;
+}
+
+.loading-container p {
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+/* Unauthorized access container */
+.unauthorized-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  width: 100%;
+  text-align: center;
+  padding: 2rem;
+}
+
+.unauthorized-container h2 {
+  color: var(--error-color, #c62828);
+  margin-bottom: 1rem;
+}
+
+.unauthorized-container p {
+  color: var(--text-color);
+  font-size: 1.1rem;
+}

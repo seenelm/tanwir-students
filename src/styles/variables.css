@@ -14,6 +14,10 @@
   --card-background: #f8f9fa;
   --text-secondary: #666;
   --hover-background: rgba(0, 0, 0, 0.05);
+  --success-color: #2e7d32;
+  --success-hover: #266123;
+  --error-color: #c62828;
+  --error-hover: #b71c1c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,5 +33,9 @@
     --card-background: #262626;
     --text-secondary: #a0a0a0;
     --hover-background: rgba(255, 255, 255, 0.05);
+    --success-color: #2e7d32;
+    --success-hover: #266123;
+    --error-color: #c62828;
+    --error-hover: #b71c1c;
   }
 }

@@ -1,17 +1,48 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Home } from './home/Home';
 import { Courses } from './courses/Courses';
 import { Assignments } from './assignments/Assignments';
 import { Videos } from './videos/Videos';
 import { CourseDetail } from './courses/CourseDetail';
 import { AssignmentDetail } from './assignments/AssignmentDetail';
+import { Scholarships } from './scholarships/Scholarships';
+import { Students } from './admin/Students';
+import { AuthService, UserRole } from '../services/auth';
 
 interface ContentProps {
   currentPage: string;
 }
 
 export const Content: React.FC<ContentProps> = ({ currentPage }) => {
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const authService = AuthService.getInstance();
+        const role = await authService.getUserRole();
+        setUserRole(role);
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
+
   const renderContent = () => {
+    // Show loading state while fetching user role
+    if (loading) {
+      return (
+        <div className="loading-container">
+          <p>Loading...</p>
+        </div>
+      );
+    }
+
     switch (currentPage.toLowerCase()) {
       case 'courses':
         return <Courses />;
@@ -25,6 +56,30 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         return <CourseDetail />;
       case 'assignmentdetail':
         return <AssignmentDetail />;
+      case 'financial aid':
+        // Only allow admin users to access the scholarships page
+        if (userRole === 'admin') {
+          return <Scholarships />;
+        } else {
+          return (
+            <div className="unauthorized-container">
+              <h2>Unauthorized Access</h2>
+              <p>You do not have permission to view this page.</p>
+            </div>
+          );
+        }
+      case 'students':
+        // Only allow admin users to access the students page
+        if (userRole === 'admin') {
+          return <Students />;
+        } else {
+          return (
+            <div className="unauthorized-container">
+              <h2>Unauthorized Access</h2>
+              <p>You do not have permission to view this page.</p>
+            </div>
+          );
+        }
       case 'settings':
         return (
           <div>

@@ -1,11 +1,12 @@
-import React from 'react';
-import { AuthService } from '../services/auth';
+import React, { useEffect, useState } from 'react';
+import { AuthService, UserRole } from '../services/auth';
 import '../styles/main.css';
 
 type Route = {
   path: string;
   title: string;
   icon: string;
+  adminOnly?: boolean;
 };
 
 const routes: Route[] = [
@@ -15,6 +16,8 @@ const routes: Route[] = [
   // { path: '/courses', title: 'Courses', icon: 'school' },
   // { path: '/videos', title: 'Videos', icon: 'play_circle' },
   // { path: '/settings', title: 'Settings', icon: 'settings' },
+  { path: '/scholarships', title: 'Financial Aid', icon: 'school', adminOnly: true },
+  { path: '/students', title: 'Students', icon: 'people', adminOnly: true },
 ];
 
 const CLASS_NAMES = {
@@ -40,6 +43,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isActive = false,
 }) => {
   const authService = AuthService.getInstance();
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const role = await authService.getUserRole();
+      setUserRole(role);
+    };
+
+    fetchUserRole();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -56,6 +69,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onClose?.(); // optional collapse for mobile
   };
 
+  // Filter routes based on user role
+  const filteredRoutes = routes.filter(route => {
+    if (route.adminOnly) {
+      return userRole === 'admin';
+    }
+    return true;
+  });
+
   return (
     <div className={`${CLASS_NAMES.sidebar} ${isActive ? 'active' : ''}`}>
       <div className={CLASS_NAMES.logoContainer}>
@@ -65,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <nav>
         <ul>
-          {routes.map(route => (
+          {filteredRoutes.map(route => (
             <li key={route.path}>
               <a
                 href={route.path}
