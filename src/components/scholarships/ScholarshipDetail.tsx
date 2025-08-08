@@ -183,32 +183,13 @@ export const ScholarshipDetail: React.FC<ScholarshipDetailProps> = ({ applicatio
             </select>
           </div>
           
-          <div className="button-group" style={{
-            display: 'flex',
-            gap: '0.75rem',
-            marginTop: '1.5rem',
-            flexWrap: 'wrap'
-          }}>
+          <div className="button-group">
             {application.status === 'pending' && (
               <>
                 <button
                   className="approve-button"
                   onClick={handleApprove}
                   disabled={isSubmitting}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    minWidth: '120px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'var(--success-color, #5cb85c)',
-                    color: 'white',
-                    opacity: isSubmitting ? 0.6 : 1
-                  }}
                 >
                   {isSubmitting ? 'Processing...' : 'Approve'}
                 </button>
@@ -216,20 +197,6 @@ export const ScholarshipDetail: React.FC<ScholarshipDetailProps> = ({ applicatio
                   className="deny-button"
                   onClick={handleDeny}
                   disabled={isSubmitting}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    minWidth: '120px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'var(--error-color, #d9534f)',
-                    color: 'white',
-                    opacity: isSubmitting ? 0.6 : 1
-                  }}
                 >
                   {isSubmitting ? 'Processing...' : 'Deny'}
                 </button>
@@ -238,19 +205,6 @@ export const ScholarshipDetail: React.FC<ScholarshipDetailProps> = ({ applicatio
             <button 
               className="close-button-alt" 
               onClick={onClose}
-              style={{
-                padding: '0.75rem 1.5rem',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                minWidth: '120px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: 'var(--secondary-color, #6c757d)',
-                color: 'white'
-              }}
             >
               Close
             </button>
