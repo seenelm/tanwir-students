@@ -35,7 +35,7 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       '/assignments': 'Assignments',
       '/videos': 'Videos',
       '/settings': 'Settings',
-      '/scholarships': 'Scholarships',
+      '/scholarships': 'Financial Aid',
       '/students': 'Students'
     };
     
@@ -55,7 +55,7 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       'Assignments': '/assignments',
       'Videos': '/videos',
       'Settings': '/settings',
-      'Scholarships': '/scholarships',
+      'Financial Aid': '/scholarships',
       'Students': '/students'
     };
     
@@ -69,7 +69,7 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     setCurrentPage(page);
     
     // Reset breadcrumbs when navigating to a main page
-    if (['Home', 'Courses', 'Assignments', 'Videos', 'Settings', 'Scholarships', 'Students'].includes(page)) {
+    if (['Home', 'Courses', 'Assignments', 'Videos', 'Settings', 'Financial Aid', 'Students'].includes(page)) {
       setBreadcrumbs([page]);
       // Clear courseId when not in course detail
       if (page !== 'CourseDetail') {
