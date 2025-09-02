@@ -159,28 +159,40 @@ export class DiscountCodeService {
       
       console.log(`Found ${courseCodes.length} codes for course ${courseName}`);
       
-      // Parse discount percentages from strings to numbers for comparison
+      // Parse discount percentages from the code format (FAID-XX-YY-ZZ-ABCD where YY is the discount percentage)
       courseCodes = courseCodes.map(code => {
-        const discountStr = code.discount;
-        const discountNum = parseInt(discountStr.replace('%', ''));
+        let discountNum = 0;
+        
+        // Extract discount from code format (e.g., FAID-AS-100-25-TLFP -> 100)
+        const codeMatch = code.code.match(/FAID-[A-Z]+-(\d+)-\d+-[A-Z0-9]+/i);
+        if (codeMatch && codeMatch[1]) {
+          discountNum = parseInt(codeMatch[1]);
+        } else {
+          // Fallback to the discount field if code format doesn't match
+          const discountStr = code.discount;
+          discountNum = parseInt(discountStr.replace('%', ''));
+        }
+        
         return {
           ...code,
           discountNum // Add numeric discount value for sorting
         };
       });
       
-      // Sort codes by how close they are to the target percentage
-      courseCodes.sort((a, b) => {
-        const aDiff = Math.abs((a as any).discountNum - targetDiscountPercentage);
-        const bDiff = Math.abs((b as any).discountNum - targetDiscountPercentage);
-        return aDiff - bDiff;
-      });
+      // Filter to only include exact matches for the target discount percentage
+      const exactMatches = courseCodes.filter(code => (code as any).discountNum === targetDiscountPercentage);
       
-      // Get the closest match
-      const bestMatch = courseCodes[0];
+      if (exactMatches.length === 0) {
+        console.log(`❌ No exact match found for ${targetDiscountPercentage}% discount for course: ${courseName}`);
+        console.log(`Available discount percentages: ${[...new Set(courseCodes.map(c => (c as any).discountNum))].join(', ')}%`);
+        return null;
+      }
+      
+      // Get the first exact match
+      const bestMatch = exactMatches[0];
       
       if (bestMatch) {
-        console.log(`Selected discount code: ${bestMatch.code} (${bestMatch.discount}) for course: ${bestMatch.course}`);
+        console.log(`✅ Found available discount code: ${bestMatch.code} (${(bestMatch as any).discountNum}%) for course: ${bestMatch.course}`);
         return bestMatch;
       }
       
