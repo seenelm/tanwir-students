@@ -372,9 +372,6 @@ export const CourseDetail: React.FC = () => {
                   <li key={student.uid || index} className="student-item">
                     <span className="student-name">
                       {getDisplayName(student)}
-                      <span style={{ fontSize: '0.8em', color: 'gray', marginLeft: '5px' }}>
-                        (ID: {student.uid || 'unknown'})
-                      </span>
                     </span>
                   </li>
                 ))}
