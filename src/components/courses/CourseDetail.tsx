@@ -21,8 +21,11 @@ interface WeeklyFocus {
 
 interface WeeklyScheduleItem {
   week: number;
-  topic: string;
-  description: string;
+  date?: string;
+  topic?: string;
+  description?: string;
+  Iman?: string;
+  Ihsan?: string;
 }
 
 interface Assessment {
@@ -43,6 +46,7 @@ interface SyllabusData {
   assessment?: Assessment;
   requiredTexts?: string[];
   weeklySchedule?: WeeklyScheduleItem[];
+  subjects?: string[];
   
   // Legacy fields for backward compatibility
   overview?: string[];
@@ -434,6 +438,17 @@ export const CourseDetail: React.FC = () => {
                     </div>
                   )}
                   
+                  {syllabus.subjects && syllabus.subjects.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Subjects</h5>
+                      <ul>
+                        {syllabus.subjects.map((subject, index) => (
+                          <li key={`subject-${index}`}>{subject}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
                   {syllabus.learningOutcomes && syllabus.learningOutcomes.length > 0 && (
                     <div className="syllabus-section" style={{ marginBottom: '20px' }}>
                       <h5>Learning Outcomes</h5>
@@ -494,9 +509,38 @@ export const CourseDetail: React.FC = () => {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
                         {syllabus.weeklySchedule.map((schedule, index) => (
                           <div key={`schedule-${index}`} className="syllabus-card">
-                            <h6 style={{ marginTop: '0' }}>Week {schedule.week}</h6>
-                            <p><strong>Topic:</strong> {schedule.topic}</p>
-                            <p style={{ marginBottom: '0' }}><strong>Description:</strong> {schedule.description}</p>
+                            <div className="syllabus-card-header">
+                              <h6 style={{ marginTop: '0', marginBottom: '5px' }}>Week {schedule.week}</h6>
+                              {schedule.date && (
+                                <span className="schedule-date">{schedule.date}</span>
+                              )}
+                            </div>
+                            
+                            {/* Traditional topic/description format */}
+                            {schedule.topic && (
+                              <p><strong>Topic:</strong> {schedule.topic}</p>
+                            )}
+                            {schedule.description && (
+                              <p><strong>Description:</strong> {schedule.description}</p>
+                            )}
+                            
+                            {/* New Iman/Ihsan format */}
+                            {(schedule.Iman || schedule.Ihsan) && (
+                              <div className="schedule-subjects">
+                                {schedule.Iman && (
+                                  <div className="schedule-subject">
+                                    <h6 className="subject-title">Iman</h6>
+                                    <p>{schedule.Iman}</p>
+                                  </div>
+                                )}
+                                {schedule.Ihsan && (
+                                  <div className="schedule-subject">
+                                    <h6 className="subject-title">Ihsan</h6>
+                                    <p>{schedule.Ihsan}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

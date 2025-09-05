@@ -790,3 +790,48 @@ button:hover {
 .syllabus-card strong {
   color: var(--text-secondary);
 }
+
+/* Enhanced syllabus schedule styles */
+.syllabus-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.schedule-date {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.schedule-subjects {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+@media (min-width: 768px) {
+  .schedule-subjects {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.schedule-subject {
+  padding: 10px;
+  background-color: var(--primary-light);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.subject-title {
+  margin: 0 0 5px 0;
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--primary-color);
+  padding-bottom: 3px;
+  display: inline-block;
+}

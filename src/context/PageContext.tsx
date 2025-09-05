@@ -46,10 +46,46 @@ const pathToPageMap: Record<string, string> = {
 };
 
 export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState('Home');
+  // Initialize based on URL path
+  const getInitialPage = () => {
+    const path = window.location.pathname;
+    
+    // Map URL paths to page names
+    const pathToPage: Record<string, string> = {
+      '/': 'Home',
+      '/courses': 'Courses',
+      '/assignments': 'Assignments',
+      '/videos': 'Videos',
+      '/settings': 'Settings',
+      '/scholarships': 'Financial Aid',
+      '/students': 'Students'
+    };
+    
+    return pathToPage[path] || 'Home';
+  };
+
+  const [currentPage, setCurrentPage] = useState(getInitialPage());
   const [courseId, setCourseId] = useState<string | null>(null);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
-  const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Home']);
+  const [breadcrumbs, setBreadcrumbs] = useState<string[]>([getInitialPage()]);
+
+  // Update URL when page changes
+  useEffect(() => {
+    const pageToPath: Record<string, string> = {
+      'Home': '/',
+      'Courses': '/courses',
+      'Assignments': '/assignments',
+      'Videos': '/videos',
+      'Settings': '/settings',
+      'Financial Aid': '/scholarships',
+      'Students': '/students'
+    };
+    
+    const path = pageToPath[currentPage] || '/';
+    
+    // Update URL without full page reload
+    window.history.pushState(null, '', path);
+  }, [currentPage]);
   const [assignmentCourseId, setAssignmentCourseId] = useState<string | null>(null);
   const [assignmentCourseName, setAssignmentCourseName] = useState<string | null>(null);
   const [quizCourseId, setQuizCourseId] = useState<string | null>(null);
@@ -105,7 +141,7 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     setCurrentPage(page);
     
     // Reset breadcrumbs when navigating to a main page
-    if (['Home', 'Courses', 'Videos', 'Settings'].includes(page)) {
+    if (['Home', 'Courses', 'Videos', 'Settings', 'Financial Aid', 'Students'].includes(page)) {
       setBreadcrumbs([page]);
       
       // Clear courseId when not in course detail
@@ -133,8 +169,8 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         currentPage, 
         setCurrentPage: handleSetCurrentPage, 
         courseId, 
-        setCourseId,
-        assignmentId,
+        setCourseId, 
+        assignmentId, 
         setAssignmentId,
         breadcrumbs,
         setBreadcrumbs,
