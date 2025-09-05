@@ -7,7 +7,9 @@ import { CourseDetail } from './courses/CourseDetail';
 import { AssignmentDetail } from './assignments/AssignmentDetail';
 import { Scholarships } from './scholarships/Scholarships';
 import { Students } from './admin/Students';
+import QuizCreation from './admin/QuizCreation';
 import { AuthService, UserRole } from '../services/auth';
+import { usePage } from '../context/PageContext';
 
 interface ContentProps {
   currentPage: string;
@@ -16,6 +18,7 @@ interface ContentProps {
 export const Content: React.FC<ContentProps> = ({ currentPage }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const { quizCourseId } = usePage();
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -56,6 +59,18 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         return <CourseDetail />;
       case 'assignmentdetail':
         return <AssignmentDetail />;
+      case 'createquiz':
+        // Only allow admin users to access the quiz creation page
+        if (userRole === 'admin') {
+          return <QuizCreation courseId={quizCourseId || undefined} />;
+        } else {
+          return (
+            <div className="unauthorized-container">
+              <h2>Unauthorized Access</h2>
+              <p>You do not have permission to view this page.</p>
+            </div>
+          );
+        }
       case 'financial aid':
         // Only allow admin users to access the scholarships page
         if (userRole === 'admin') {

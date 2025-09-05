@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Course } from '../../services/courses/types/course';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { CourseCard } from './CourseCard';
@@ -7,119 +7,111 @@ import confusedImage from '../../assets/confused1.webp';
 
 export const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
-  const [isEnrolling, setIsEnrolling] = useState<boolean>(false);
-  const [enrollmentStatus, setEnrollmentStatus] = useState<{success: boolean; message: string; courseId: string} | null>(null);
+  
+  // Add a ref to track if courses have been loaded
+  const coursesLoadedRef = useRef<boolean>(false);
 
   useEffect(() => {
     const fetchCourses = async () => {
+      // Skip fetching if courses are already loaded
+      if (coursesLoadedRef.current) {
+        console.log('Courses: Using cached courses data');
+        return;
+      }
+      
       try {
+        setLoading(true);
         const service = CourseService.getInstance();
         const authService = AuthService.getInstance();
         
-        // Get user role
         const role = await authService.getUserRole();
         setUserRole(role);
-        
-        // Get all courses
-        const response = await service.getCourses({});
-        const allCourses = response.course;
+        console.log('Courses: User role', role);
         
         // Get current user
         const currentUser = authService.getCurrentUser();
+        console.log('Courses: Current user', currentUser?.uid);
+        
         if (currentUser) {
-          setCurrentUserId(currentUser.uid);
+          // Get user's enrolled courses
+          const enrolledCourseRefs = await authService.getUserEnrolledCourses();
+          console.log('Courses: Enrolled course refs', enrolledCourseRefs);
+          setEnrolledCourseIds(enrolledCourseRefs);
           
-          // If user is a student, identify enrolled courses
-          if (role === 'student') {
-            const enrolledIds = allCourses
-              .filter(course => course.Enrollments.some(enrollment => enrollment.EnrolleeId === currentUser.uid))
-              .map(course => course.Id);
-            setEnrolledCourseIds(enrolledIds);
+          if (role === 'admin') {
+            // Admins can see all courses
+            console.log('Courses: User is admin, fetching all courses');
+            const response = await service.getCourses();
+            console.log('Courses: All courses fetched', response.course.length);
+            setCourses(response.course);
+          } else {
+            // Students can only see enrolled courses
+            console.log('Courses: User is student, fetching enrolled courses');
+            if (enrolledCourseRefs.length > 0) {
+              // Fetch only the enrolled courses
+              console.log('Courses: Found enrolled course refs, fetching courses');
+              const enrolledCourses: Course[] = [];
+              
+              for (const courseId of enrolledCourseRefs) {
+                console.log('Courses: Fetching course', courseId);
+                const course = await service.getCourseById(courseId);
+                console.log('Courses: Course data', course);
+                if (course) {
+                  enrolledCourses.push(course);
+                }
+              }
+              
+              console.log('Courses: Setting enrolled courses', enrolledCourses.length);
+              setCourses(enrolledCourses);
+            } else {
+              console.log('Courses: No enrolled courses found');
+              setCourses([]);
+            }
           }
+        } else {
+          console.log('Courses: No current user');
+          setCourses([]);
         }
         
-        // Show all courses regardless of enrollment status
-        setCourses(allCourses);
+        // Mark courses as loaded
+        coursesLoadedRef.current = true;
       } catch (error) {
         console.error('Failed to fetch courses:', error);
+        setCourses([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCourses();
-  }, [isEnrolling]);
+  }, []);
 
-  const handleEnroll = async (courseId: string) => {
-    if (!currentUserId) return;
-    
-    try {
-      setIsEnrolling(true);
-      const service = CourseService.getInstance();
-      const authService = AuthService.getInstance();
-      const currentUser = authService.getCurrentUser();
-      
-      if (currentUser) {
-        // Get user's name from Firestore
-        const users = await authService.getAllUsers();
-        const user = users.find(u => u.uid === currentUser.uid);
-        const studentName = user ? `${user.FirstName} ${user.LastName}` : currentUser.email || 'Student';
-        
-        // Enroll the student
-        await service.enrollStudent(courseId, currentUser.uid, studentName);
-        
-        // Update enrolled course IDs
-        setEnrolledCourseIds(prev => [...prev, courseId]);
-        setEnrollmentStatus({
-          success: true,
-          message: 'Successfully enrolled in the course!',
-          courseId: courseId
-        });
-        
-        // Clear status message after 3 seconds
-        setTimeout(() => {
-          setEnrollmentStatus(null);
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Failed to enroll in course:', error);
-      setEnrollmentStatus({
-        success: false,
-        message: 'Failed to enroll in the course. Please try again.',
-        courseId: courseId
-      });
-      
-      // Clear error message after 3 seconds
-      setTimeout(() => {
-        setEnrollmentStatus(null);
-      }, 3000);
-    } finally {
-      setIsEnrolling(false);
-    }
-  };
-
+  // Helper function to check if a user is enrolled in a course
   const isEnrolled = (courseId: string) => {
     return enrolledCourseIds.includes(courseId);
   };
 
   return (
     <div className="courses-container">
-      {courses.length > 0 ? (
+      {loading ? (
+        <div className="loading-container">
+          <p>Loading courses...</p>
+        </div>
+      ) : courses.length > 0 ? (
         <div className="courses-grid">
           {courses.map((course) => (
             <CourseCard
               key={course.Id}
               courseId={course.Id}
-              name={course.Name}
-              description={course.Description}
-              level={course.Level}
-              createdBy={course.CreatedBy}
-              enrollmentCount={course.Enrollments ? course.Enrollments.length : 0}
+              name={course.name || course.Name || ''}
+              description={course.description || course.Description || ''}
+              section={course.section || course.Section || ''}
+              year={course.year || course.Year || ''}
+              createdBy={course.createdBy || course.CreatedBy || ''}
               isEnrolled={isEnrolled(course.Id)}
-              onEnroll={() => handleEnroll(course.Id)}
-              isStudent={userRole === 'student'}
-              enrollmentStatus={enrollmentStatus && enrollmentStatus.courseId === course.Id ? enrollmentStatus : null}
             />
           ))}
         </div>
@@ -129,9 +121,9 @@ export const Courses: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '60vh',
+          padding: '2rem',
           textAlign: 'center',
-          padding: '1rem'
+          minHeight: '60vh'
         }}>
           <img 
             src={confusedImage} 
@@ -147,7 +139,7 @@ export const Courses: React.FC = () => {
             color: 'var(--text-secondary)',
             marginTop: '1rem'
           }}>
-            No courses available.
+            {userRole === 'student' ? 'You are not enrolled in any courses.' : 'No courses available.'}
           </p>
         </div>
       )}

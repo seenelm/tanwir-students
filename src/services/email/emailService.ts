@@ -210,4 +210,122 @@ app.use(cors({
       throw error;
     }
   }
+
+  /**
+   * Send welcome emails to multiple students for Prophetic Guidance course
+   * @param emails Array of student email addresses
+   * @returns Promise resolving to boolean indicating success
+   */
+  async sendPropheticGuidanceWelcomeEmails(emails: string[]): Promise<boolean> {
+    console.log(`📧 Preparing welcome emails for ${emails.length} students via backend API`);
+    console.log(`- Backend URL: ${this.backendUrl}`);
+    
+    try {
+      // First test the connection
+      const isConnected = await this.testBackendConnection();
+      if (!isConnected) {
+        console.error('❌ Cannot send emails: Backend connection test failed');
+        throw new Error('Backend connection test failed');
+      }
+      
+      // Construct the full URL
+      const fullUrl = `${this.backendUrl}/send-prophetic-guidance-welcome`;
+      console.log(`- Full API URL: ${fullUrl}`);
+      
+      // Prepare payload with the email addresses
+      const payload = {
+        emails: emails
+      };
+      console.log(`- Sending welcome emails to ${emails.length} recipients`);
+      
+      // Call the backend API to send the welcome emails
+      const response = await axios.post(fullUrl, payload);
+      
+      console.log('- Response received:', response.status, response.statusText);
+      
+      if (response.status === 200 && response.data.success) {
+        console.log('✅ Welcome emails sent successfully via backend API');
+        return true;
+      } else {
+        console.error('❌ Backend API returned an error:', response.data);
+        return false;
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Axios error calling backend API:', {
+          message: error.message,
+          response: error.response?.data || 'No response data',
+          status: error.response?.status || 'No status code'
+        });
+        
+        // Check for CORS issues
+        if (error.message.includes('Network Error') || !error.response) {
+          console.error('⚠️ This might be a CORS issue. Make sure your backend has CORS enabled for your frontend origin.');
+        }
+      } else {
+        console.error('❌ Error calling backend API:', error);
+      }
+      
+      return false;
+    }
+  }
+
+  /**
+   * Send welcome emails to multiple students for Associates Program
+   * @param recipients Array of recipients with email and name
+   * @returns Promise resolving to boolean indicating success
+   */
+  async sendAssociatesProgramWelcomeEmails(recipients: EmailRecipient[]): Promise<boolean> {
+    console.log(`📧 Preparing Associates Program welcome emails for ${recipients.length} students via backend API`);
+    console.log(`- Backend URL: ${this.backendUrl}`);
+    
+    try {
+      // First test the connection
+      const isConnected = await this.testBackendConnection();
+      if (!isConnected) {
+        console.error('❌ Cannot send emails: Backend connection test failed');
+        throw new Error('Backend connection test failed');
+      }
+      
+      // Construct the full URL
+      const fullUrl = `${this.backendUrl}/send-associates-program-welcome`;
+      console.log(`- Full API URL: ${fullUrl}`);
+      
+      // Prepare payload with the recipients
+      const payload = {
+        recipients: recipients
+      };
+      console.log(`- Sending welcome emails to ${recipients.length} recipients`);
+      
+      // Call the backend API to send the welcome emails
+      const response = await axios.post(fullUrl, payload);
+      
+      console.log('- Response received:', response.status, response.statusText);
+      
+      if (response.status === 200 && response.data.success) {
+        console.log('✅ Associates Program welcome emails sent successfully via backend API');
+        return true;
+      } else {
+        console.error('❌ Backend API returned an error:', response.data);
+        return false;
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Axios error calling backend API:', {
+          message: error.message,
+          response: error.response?.data || 'No response data',
+          status: error.response?.status || 'No status code'
+        });
+        
+        // Check for CORS issues
+        if (error.message.includes('Network Error') || !error.response) {
+          console.error('⚠️ This might be a CORS issue. Make sure your backend has CORS enabled for your frontend origin.');
+        }
+      } else {
+        console.error('❌ Error calling backend API:', error);
+      }
+      
+      return false;
+    }
+  }
 }

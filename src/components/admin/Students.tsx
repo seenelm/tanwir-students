@@ -10,7 +10,7 @@ interface FirestoreTimestamp {
 }
 
 // Update the interface to handle Firestore timestamp
-interface StudentWithDetails extends Omit<AuthorizedUser, 'CreatedAt'> {
+interface StudentWithDetails extends Omit<AuthorizedUser, "CreatedAt"> {
   CreatedAt?: Date | FirestoreTimestamp;
   created?: Date | FirestoreTimestamp;
   createdAt?: Date | FirestoreTimestamp; // Additional possible field name
@@ -25,7 +25,9 @@ interface StudentWithDetails extends Omit<AuthorizedUser, 'CreatedAt'> {
     password?: string;
     [key: string]: any;
   };
+  // Define courses property separately instead of extending from AuthorizedUser
   courses?: Array<{
+    courseRef: string; // Make courseRef required (not optional)
     courseId?: string;
     courseName?: string;
     courseType?: string;

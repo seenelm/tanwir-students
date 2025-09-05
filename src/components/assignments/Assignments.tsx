@@ -36,7 +36,7 @@ export const Assignments: React.FC = () => {
           if (currentUser) {
             const enrolledIds = courses.course
               .filter(course => 
-                course.Enrollments.some(enrollment => 
+                course.Enrollments?.some(enrollment => 
                   enrollment.EnrolleeId === currentUser.uid
                 )
               )

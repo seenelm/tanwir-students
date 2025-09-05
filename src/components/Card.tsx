@@ -33,7 +33,7 @@ export const Card: React.FC<CardProps> = ({
         <h3>{title}</h3>
         {subtitle && <h5 className="card-subtitle">{subtitle}</h5>}
       </div>
-      {description && <p className="card-description">{description}</p>}
+      {description && <div className="card-description">{description}</div>}
       <div className="card-body">{children}</div>
       {footer && <div className="card-footer">{footer}</div>}
     </div>

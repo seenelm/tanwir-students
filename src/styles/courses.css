@@ -767,3 +767,26 @@ button:hover {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
 }
+
+/* Syllabus card styles for weekly schedule and focus */
+.syllabus-card {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+  background-color: var(--card-background);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.syllabus-card h6 {
+  margin-top: 0;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.syllabus-card p {
+  color: var(--text-color);
+}
+
+.syllabus-card strong {
+  color: var(--text-secondary);
+}

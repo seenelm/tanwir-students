@@ -1,6 +1,6 @@
 export interface Enrollment {
-  EnrolleeId: string;
-  Name: string;
+  enrolleeId: string;
+  name: string;
 }
 
 export interface CourseRequest {
@@ -27,25 +27,26 @@ export interface CourseEventData {
 }
 
 export interface Course {
-  Id: string;
-  CreatedAt: Date;
-  CreatedBy: string;
-  Description: string;
-  Enrollments: Enrollment[];
-  Level: number;
-  Name: string;
-  Syllabus?: string; // Optional syllabus content
-  // Square-related fields
-  CatalogItemId?: string; // ID of the course in Square catalog
-  Price?: number; // Price in dollars (default variation price)
-  PaymentLink?: string; // Square payment link for direct checkout
-  ImageUrl?: string; // Image URL from Square catalog
-  LastUpdated?: Date; // Last time the course was updated
-  SquareData?: {
-    variations: CourseVariation[];
-    eventData?: CourseEventData;
-    categoryIds?: string[];
-  };
+  Id: string;  // Keep uppercase Id for compatibility with existing code
+  name: string;
+  description: string;
+  createdBy: string;
+  createdAt?: any;
+  section?: string;
+  year?: string;
+  syllabus?: string;
+  subjects?: string[];  // Array of subjects for the course
+  // Add these for compatibility with existing code
+  Name?: string;      // Alias for name
+  Description?: string; // Alias for description
+  CreatedBy?: string;   // Alias for createdBy
+  CreatedAt?: any;      // Alias for createdAt
+  Section?: string;     // Alias for section
+  Year?: string;        // Alias for year
+  Syllabus?: string;    // Alias for syllabus
+  Subjects?: string[];  // Uppercase alias for subjects
+  Enrollments?: any[];  // Keep for compatibility
+  Level?: number;       // Keep for compatibility
 }
 
 export interface CourseResponse {

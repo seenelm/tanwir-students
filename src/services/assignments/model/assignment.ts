@@ -7,12 +7,13 @@ export const assignmentConverter: FirestoreDataConverter<Assignment> = {
     return {
       CourseId: assignment.CourseId,
       CourseName: assignment.CourseName,
-      CreatedAt: Timestamp.fromDate(assignment.CreatedAt),
+      CreatedAt: assignment.CreatedAt instanceof Date ? Timestamp.fromDate(assignment.CreatedAt) : Timestamp.now(),
       CreatedBy: assignment.CreatedBy,
       Description: assignment.Description,
-      DueDate: Timestamp.fromDate(assignment.DueDate),
+      DueDate: assignment.DueDate instanceof Date ? Timestamp.fromDate(assignment.DueDate) : Timestamp.now(),
       Points: assignment.Points,
       Title: assignment.Title,
+      Subject: assignment.Subject || null,
     };
   },
   fromFirestore: (snapshot: QueryDocumentSnapshot): Assignment => {
@@ -27,6 +28,7 @@ export const assignmentConverter: FirestoreDataConverter<Assignment> = {
       DueDate: (data.DueDate as Timestamp).toDate(),
       Points: data.Points,
       Title: data.Title,
+      Subject: data.Subject || null,
     };
   }
 };

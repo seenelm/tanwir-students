@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { usePage } from '../../context/PageContext';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { Course } from '../../services/courses/types/course';
-import { usePage } from '../../context/PageContext';
 import { AuthService, UserRole } from '../../services/auth';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
+import { CourseAssignments } from '../assignments/CourseAssignments';
+import { EmailService } from '../../services/email/emailService';
 
 // Syllabus data structure
 interface SyllabusSemester {
@@ -11,14 +13,44 @@ interface SyllabusSemester {
   courses: string[];
 }
 
+interface WeeklyFocus {
+  weeks: string;
+  theme: string;
+  description: string;
+}
+
+interface WeeklyScheduleItem {
+  week: number;
+  topic: string;
+  description: string;
+}
+
+interface Assessment {
+  type: string;
+  components: string[];
+}
+
 interface SyllabusData {
   title: string;
+  classTime?: string;
+  timeframe?: string;
+  instructors?: string[];
+  format?: string;
+  prerequisites?: string;
+  programOverview?: string;
+  learningOutcomes?: string[];
+  weeklyFocus?: WeeklyFocus[];
+  assessment?: Assessment;
+  requiredTexts?: string[];
+  weeklySchedule?: WeeklyScheduleItem[];
+  
+  // Legacy fields for backward compatibility
   overview?: string[];
   audience?: string[];
   semesters?: SyllabusSemester[];
 }
 
-type TabType = 'overview' | 'syllabus' | 'grades';
+type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments';
 
 interface StudentGrade {
   assignmentId: string;
@@ -43,9 +75,9 @@ export const CourseDetail: React.FC = () => {
   const [allStudentGrades, setAllStudentGrades] = useState<StudentGrades[]>([]);
   const [gradesLoading, setGradesLoading] = useState(false);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string }[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { courseId } = usePage();
   
   useEffect(() => {
@@ -58,7 +90,7 @@ export const CourseDetail: React.FC = () => {
       setLoading(true);
   
       // Get course from cache (which is now maintained by real-time listener)
-      const fetchedCourse = courseService.getCourseById(courseId);
+      const fetchedCourse = await courseService.getCourseById(courseId);
       setCourse(fetchedCourse ?? null);
       
       // Get user role
@@ -68,26 +100,41 @@ export const CourseDetail: React.FC = () => {
       // Check if current user is enrolled
       const currentUser = authService.getCurrentUser();
       if (currentUser && fetchedCourse) {
-        const enrolled = courseService.isStudentEnrolled(courseId, currentUser.uid);
-        setIsEnrolled(enrolled);
+        courseService.isStudentEnrolled(courseId, currentUser.uid);
       }
-
-      // Fetch available users if admin
-      if (role === 'admin') {
-        try {
-          const users = await authService.getAllUsers();
-          const enrolledUserIds = new Set(fetchedCourse?.Enrollments?.map(e => e.EnrolleeId) || []);
-          const availableUsers = users
-            .filter(user => !enrolledUserIds.has(user.uid))
-            .map(user => ({
-              id: user.uid,
-              name: user.FirstName + ' ' + user.LastName
-            }));
-          console.log('Mapped available users:', availableUsers);
-          setAvailableUsers(availableUsers);
-        } catch (error) {
-          console.error('Error fetching available users:', error);
-        }
+      
+      // Fetch enrolled students from users collection
+      try {
+        const allUsers = await authService.getAllUsers();
+        
+        // Filter users who are enrolled in this course
+        // The courseRef format is 'courses/CourseName'
+        const enrolled = allUsers.filter(user => {
+          if (!user.courses || !Array.isArray(user.courses)) {
+            return false;
+          }
+          
+          return user.courses.some(course => {
+            // Check different possible formats of course reference
+            if (course.courseRef === `courses/${courseId}`) {
+              return true;
+            }
+            
+            // Also check if courseRef contains the courseId
+            if (course.courseRef && typeof course.courseRef === 'string' && 
+                (course.courseRef.includes(courseId) || courseId.includes(course.courseRef.split('/')[1]))) {
+              return true;
+            }
+            
+            
+            return false;
+          });
+        });
+        
+        console.log(`Found ${enrolled.length} students enrolled in course ${courseId}`);
+        setEnrolledStudents(enrolled);
+      } catch (error) {
+        console.error('Error fetching enrolled students:', error);
       }
       
       setLoading(false);
@@ -116,51 +163,76 @@ export const CourseDetail: React.FC = () => {
       const assignments = await assignmentService.getAssignments();
       const courseAssignments = assignments.filter(a => a.CourseId === course.Id);
       
+      // Fetch all quiz results for this course in a single batch
+      const allResults = await assignmentService.getAllQuizResultsForCourse(course.Id);
+      
       if (userRole === 'student') {
-        // For students, fetch only their own grades
+        // For students, filter only their own grades
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
-          // This is a placeholder - in a real implementation, you would fetch the student's grades
-          // from a studentAssignments collection or similar
-          const mockStudentGrades: StudentGrade[] = courseAssignments.map(assignment => ({
-            assignmentId: assignment.AssignmentId,
-            assignmentTitle: assignment.Title,
-            score: Math.floor(Math.random() * assignment.Points), // Mock data
-            totalPoints: assignment.Points,
-            submittedAt: new Date(Date.now() - Math.random() * 604800000) // Random date within the last week
-          }));
+          const studentGrades: StudentGrade[] = [];
           
-          setStudentGrades(mockStudentGrades);
-        }
-      } else if (userRole === 'admin') {
-        // For admins, fetch grades for all enrolled students
-        if (course.Enrollments && course.Enrollments.length > 0) {
-          // Log the entire enrollments array to inspect its structure
-          console.log('All enrollments:', JSON.stringify(course.Enrollments));
-          
-          // This is a placeholder - in a real implementation, you would fetch grades for all students
-          const mockAllStudentGrades: StudentGrades[] = course.Enrollments.map((enrollment, index) => {
-            // Log each enrollment object to see its structure
-            console.log(`Enrollment ${index} full object:`, enrollment);
+          // Process each assignment
+          for (const assignment of courseAssignments) {
+            const assignmentResults = allResults[assignment.AssignmentId] || [];
             
-            // Create a unique ID using the index if EnrolleeId is not available
-            const studentId = `student-${index}`;
+            // Find this student's result for this assignment
+            const studentResult = assignmentResults.find(r => r.StudentId === currentUser.uid);
             
-            return {
-              studentId: studentId,
-              studentName: enrollment.Name,
-              grades: courseAssignments.map(assignment => ({
+            if (studentResult) {
+              studentGrades.push({
                 assignmentId: assignment.AssignmentId,
                 assignmentTitle: assignment.Title,
-                score: Math.floor(Math.random() * assignment.Points), // Mock data
+                score: studentResult.score || 0,
                 totalPoints: assignment.Points,
-                submittedAt: new Date(Date.now() - Math.random() * 604800000) // Random date within the last week
-              }))
-            };
-          });
+                submittedAt: studentResult.submittedAt
+              });
+            }
+          }
           
-          console.log('All student grades with IDs:', mockAllStudentGrades.map(s => ({ id: s.studentId, name: s.studentName })));
-          setAllStudentGrades(mockAllStudentGrades);
+          setStudentGrades(studentGrades);
+        }
+      } else if (userRole === 'admin') {
+        // For admins, organize grades by student
+        if (enrolledStudents && enrolledStudents.length > 0) {
+          const studentGradesMap: Record<string, StudentGrades> = {};
+          
+          // Initialize the map with student info
+          for (const student of enrolledStudents) {
+            const studentId = student.uid || student.id || student.studentId;
+            const studentName = getDisplayName(student);
+            
+            studentGradesMap[studentId] = {
+              studentId,
+              studentName,
+              grades: []
+            };
+          }
+          
+          // Process each assignment
+          for (const assignment of courseAssignments) {
+            const assignmentResults = allResults[assignment.AssignmentId] || [];
+            
+            // Process each result for this assignment
+            for (const result of assignmentResults) {
+              const studentId = result.StudentId;
+              
+              // Only process results for enrolled students
+              if (studentGradesMap[studentId]) {
+                studentGradesMap[studentId].grades.push({
+                  assignmentId: assignment.AssignmentId,
+                  assignmentTitle: assignment.Title,
+                  score: result.score || 0,
+                  totalPoints: assignment.Points,
+                  submittedAt: result.submittedAt
+                });
+              }
+            }
+          }
+          
+          // Convert the map to an array
+          const allStudentGrades = Object.values(studentGradesMap).filter(s => s.grades.length > 0);
+          setAllStudentGrades(allStudentGrades);
         }
       }
     } catch (error) {
@@ -177,98 +249,102 @@ export const CourseDetail: React.FC = () => {
     setExpandedStudentId(prevId => prevId === studentId ? null : studentId);
   };
 
-
-  const handleUnenroll = async () => {
-    if (!courseId || !course) return;
-
-    try {
-      const authService = AuthService.getInstance();
-      const courseService = CourseService.getInstance();
-      const currentUser = authService.getCurrentUser();
-
-      if (currentUser) {
-        await courseService.unenrollStudent(courseId, currentUser.uid);
-        setIsEnrolled(false);
+  const getDisplayName = (student: any) => {
+    // Try to get name from studentInfo first
+    if (student.studentInfo) {
+      const info = student.studentInfo;
+      if (info.firstName && info.lastName) {
+        return `${info.firstName} ${info.lastName}`;
+      } else if (info.firstName) {
+        return info.firstName;
+      } else if (info.lastName) {
+        return info.lastName;
+      } else if (info.name) {
+        return info.name;
       }
-    } catch (error) {
-      console.error('Error unenrolling from course:', error);
     }
+    
+    // Try email as name if it's not a UID
+    if (student.email && !student.email.includes('ID:') && !student.uid.includes(student.email)) {
+      return student.email;
+    }
+    
+    // Fall back to FirstName/LastName
+    if (student.FirstName || student.LastName) {
+      return `${student.FirstName || ''} ${student.LastName || ''}`.trim();
+    }
+    
+    // Fall back to displayName
+    if (student.displayName) {
+      return student.displayName;
+    }
+    
+    // If we have an email that looks like a name (contains @ but not the UID)
+    if (student.uid && student.uid.includes('@') && !student.uid.includes('ID:')) {
+      return student.uid;
+    }
+    
+    return 'Unknown';
   };
 
-  const handleAdminEnroll = async () => {
-    console.log('Starting handleAdminEnroll');
-    console.log('Selected User ID:', selectedUserId);
-    console.log('Course ID:', courseId);
-    console.log('Course:', course);
-    if (!courseId || !course || !selectedUserId) {
-      console.log('Missing required data:', { courseId, course, selectedUserId });
-      return;
-    }
-
+  const sendWelcomeEmails = async () => {
+    if (emailSending) return;
+    setEmailSending(true);
+    setEmailSent(false); // Reset email sent status
+    
     try {
-      console.log('Getting course service instance');
-      const courseService = CourseService.getInstance();
-      console.log('Finding selected user in availableUsers:', availableUsers);
-      const selectedUser = availableUsers.find(user => user.id === selectedUserId);
-      console.log('Selected user:', selectedUser);
+      const emailService = EmailService.getInstance();
       
-      if (selectedUser) {
-        console.log('Attempting to enroll student');
-        await courseService.enrollStudent(
-          courseId,
-          selectedUser.id,
-          selectedUser.name
-        );
-        console.log('Student enrolled successfully');
-        setSelectedUserId(''); // Reset selection
-        
-        // Refresh course data and available users
-        console.log('Refreshing course data');
-        const fetchedCourse = courseService.getCourseById(courseId);
-        setCourse(fetchedCourse ?? null);
-        
-        const users = await AuthService.getInstance().getAllUsers();
-        const enrolledUserIds = new Set(fetchedCourse?.Enrollments?.map(e => e.EnrolleeId) || []);
-        const updatedAvailableUsers = users
-          .filter(user => !enrolledUserIds.has(user.uid))
-          .map(user => ({
-            id: user.uid,
-            name: user.FirstName + ' ' + user.LastName
-          }));
-        setAvailableUsers(updatedAvailableUsers);
-      } else {
-        console.log('Selected user not found in availableUsers');
+      // Filter out students without email addresses in studentInfo
+      const studentsWithEmails = enrolledStudents.filter(student => 
+        student.studentInfo?.email || student.email
+      );
+      
+      if (studentsWithEmails.length === 0) {
+        console.error('No valid email addresses found for enrolled students');
+        alert('No valid email addresses found for enrolled students');
+        setEmailSending(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error in handleAdminEnroll:', error);
-    }
-  };
-
-  const handleAdminUnenroll = async (studentId: string) => {
-    if (!courseId || !course) return;
-
-    try {
-      const courseService = CourseService.getInstance();
-      await courseService.unenrollStudent(courseId, studentId);
       
-      // Refresh course data and available users
-      const fetchedCourse = courseService.getCourseById(courseId);
-      setCourse(fetchedCourse ?? null);
+      let success = false;
       
-      const users = await AuthService.getInstance().getAllUsers();
-      const enrolledUserIds = new Set(fetchedCourse?.Enrollments?.map(e => e.EnrolleeId) || []);
-      const updatedAvailableUsers = users
-        .filter(user => !enrolledUserIds.has(user.uid))
-        .map(user => ({
-          id: user.uid,
-          name: user.FirstName + ' ' + user.LastName
+      // Check if this is an Associates Program course
+      const isAssociatesProgram = course?.Name?.toLowerCase().includes('associate');
+      
+      if (isAssociatesProgram) {
+        // Format recipients for Associates Program
+        const recipients = studentsWithEmails.map(student => ({
+          email: student.studentInfo?.email || student.email,
+          name: getDisplayName(student)
         }));
-      setAvailableUsers(updatedAvailableUsers);
+        
+        console.log(`Sending Associates Program welcome emails to ${recipients.length} students`);
+        success = await emailService.sendAssociatesProgramWelcomeEmails(recipients);
+      } else {
+        // Default to Prophetic Guidance format (just email addresses)
+        const studentEmails = studentsWithEmails.map(student => 
+          student.studentInfo?.email || student.email
+        );
+        
+        console.log(`Sending Prophetic Guidance welcome emails to ${studentEmails.length} students`);
+        success = await emailService.sendPropheticGuidanceWelcomeEmails(studentEmails);
+      }
+      
+      if (success) {
+        setEmailSent(true);
+        alert(`Welcome emails sent successfully to ${studentsWithEmails.length} students!`);
+      } else {
+        alert('Failed to send welcome emails. Please check the console for details.');
+      }
     } catch (error) {
-      console.error('Error unenrolling student:', error);
+      console.error('Error sending welcome emails:', error);
+      alert('Error sending welcome emails: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setEmailSending(false);
     }
   };
-  
+
   const renderContent = () => {
     if (activeTab === 'overview' && course) {
       return (
@@ -285,85 +361,28 @@ export const CourseDetail: React.FC = () => {
           
           <div className="course-students">
             <h3>Enrolled Students</h3>
-            {userRole === 'admin' && (
-              <div className="admin-enrollment-section">
-                <div className="enrollment-controls" style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  width: '100%',
-                  maxWidth: '100%'
-                }}>
-                  <select 
-                    value={selectedUserId}
-                    onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="user-select"
-                    style={{
-                      backgroundColor: 'var(--background-color)',
-                      color: 'var(--text-color)',
-                      border: '1px solid var(--border-color)',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      width: '100%',
-                      maxWidth: '100%',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="">Select a student to enroll</option>
-                    {availableUsers.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button 
-                    className="enroll-button"
-                    onClick={handleAdminEnroll}
-                    disabled={!selectedUserId}
-                    style={{
-                      width: '100%',
-                      maxWidth: '100%',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    Enroll Student
-                  </button>
-                </div>
-              </div>
-            )}
-            {userRole === 'student' && isEnrolled && (
-              <div className="enrollment-actions">
-                <button 
-                  className="unenroll-button"
-                  onClick={handleUnenroll}
-                >
-                  Unenroll from Course
-                </button>
-              </div>
-            )}
-            {course.Enrollments && course.Enrollments.length > 0 ? (
+            
+            {enrolledStudents.length > 0 ? (
               <ul className="students-list">
-                {course.Enrollments.map((enrollment, index) => (
-                  <li key={index} className="student-item">
+                {enrolledStudents.map((student, index) => (
+                  <li key={student.uid || index} className="student-item">
                     <span className="student-name">
-                      {enrollment.Name || `Student ${index + 1}`}
+                      {getDisplayName(student)}
                       <span style={{ fontSize: '0.8em', color: 'gray', marginLeft: '5px' }}>
-                        (ID: {enrollment.EnrolleeId || 'unknown'})
+                        (ID: {student.uid || 'unknown'})
                       </span>
                     </span>
-                    {userRole === 'admin' && (
-                      <button 
-                        className="unenroll-button"
-                        onClick={() => handleAdminUnenroll(enrollment.EnrolleeId)}
-                      >
-                        Unenroll
-                      </button>
-                    )}
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="empty">No students enrolled yet.</p>
+            )}
+            
+            {userRole === 'admin' && (
+              <button onClick={sendWelcomeEmails} disabled={emailSending}>
+                {emailSending ? 'Sending...' : emailSent ? 'Emails sent!' : 'Send welcome emails'}
+              </button>
             )}
           </div>
         </div>
@@ -373,63 +392,162 @@ export const CourseDetail: React.FC = () => {
     if (activeTab === 'syllabus') {
       return (
         <div className="course-syllabus">
-  <h3>Course Syllabus</h3>
-  {course?.Syllabus ? (
-    (() => {
-      let syllabus: SyllabusData;
-      try {
-        syllabus = JSON.parse(course.Syllabus) as SyllabusData;
-      } catch (err) {
-        return <p className="error">Invalid syllabus format.</p>;
-      }
+          <h3>Course Syllabus</h3>
+          {course?.Syllabus ? (
+            (() => {
+              let syllabus: SyllabusData;
+              try {
+                console.log('Parsing syllabus:', course.Syllabus);
+                syllabus = JSON.parse(course.Syllabus) as SyllabusData;
+                console.log('Parsed syllabus:', syllabus);
+              } catch (err) {
+                console.error('Error parsing syllabus:', err);
+                return <p className="error">Invalid syllabus format.</p>;
+              }
 
-      return (
-        <div className="syllabus-content">
-          {syllabus.overview && (
-            <>
-              <h5>Overview</h5>
-              <ul>
-                {syllabus.overview.map((item: string, index: number) => (
-                  <li key={`overview-${index}`}>{item}</li>
-                ))}
-              </ul>
-            </>
-          )}
+              return (
+                <div className="syllabus-content" style={{ maxWidth: '100%', overflow: 'auto' }}>
+                  <h4>{syllabus.title}</h4>
+                  
+                  <div className="syllabus-metadata" style={{ marginBottom: '20px' }}>
+                    {syllabus.classTime && (
+                      <p><strong>Class Time:</strong> {syllabus.classTime}</p>
+                    )}
+                    {syllabus.timeframe && (
+                      <p><strong>Timeframe:</strong> {syllabus.timeframe}</p>
+                    )}
+                    {syllabus.instructors && (
+                      <p><strong>Instructors:</strong> {Array.isArray(syllabus.instructors) ? syllabus.instructors.join(', ') : syllabus.instructors}</p>
+                    )}
+                    {syllabus.format && (
+                      <p><strong>Format:</strong> {syllabus.format}</p>
+                    )}
+                    {syllabus.prerequisites && (
+                      <p><strong>Prerequisites:</strong> {syllabus.prerequisites}</p>
+                    )}
+                  </div>
 
-          {syllabus.audience && (
-            <>
-              <h5>Who is this for?</h5>
-              <ul>
-                {syllabus.audience.map((item: string, index: number) => (
-                  <li key={`audience-${index}`}>{item}</li>
-                ))}
-              </ul>
-            </>
-          )}
+                  {syllabus.programOverview && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Program Overview</h5>
+                      <p style={{ whiteSpace: 'pre-wrap' }}>{syllabus.programOverview}</p>
+                    </div>
+                  )}
+                  
+                  {syllabus.learningOutcomes && syllabus.learningOutcomes.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Learning Outcomes</h5>
+                      <ul>
+                        {syllabus.learningOutcomes.map((outcome, index) => (
+                          <li key={`outcome-${index}`}>{outcome}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {syllabus.weeklyFocus && syllabus.weeklyFocus.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Weekly Focus</h5>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                        {syllabus.weeklyFocus.map((focus, index) => (
+                          <div key={`focus-${index}`} className="syllabus-card">
+                            <h6 style={{ marginTop: '0' }}>Weeks {focus.weeks}</h6>
+                            <p><strong>Theme:</strong> {focus.theme}</p>
+                            <p style={{ marginBottom: '0' }}><strong>Description:</strong> {focus.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {syllabus.assessment && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Assessment</h5>
+                      <p><strong>Type:</strong> {syllabus.assessment.type}</p>
+                      {syllabus.assessment.components && syllabus.assessment.components.length > 0 && (
+                        <div>
+                          <p><strong>Components:</strong></p>
+                          <ul>
+                            {syllabus.assessment.components.map((component, index) => (
+                              <li key={`component-${index}`}>{component}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {syllabus.requiredTexts && syllabus.requiredTexts.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Required Texts</h5>
+                      <ul>
+                        {syllabus.requiredTexts.map((text, index) => (
+                          <li key={`text-${index}`}>{text}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {syllabus.weeklySchedule && syllabus.weeklySchedule.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Weekly Schedule</h5>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                        {syllabus.weeklySchedule.map((schedule, index) => (
+                          <div key={`schedule-${index}`} className="syllabus-card">
+                            <h6 style={{ marginTop: '0' }}>Week {schedule.week}</h6>
+                            <p><strong>Topic:</strong> {schedule.topic}</p>
+                            <p style={{ marginBottom: '0' }}><strong>Description:</strong> {schedule.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Legacy format support */}
+                  {syllabus.overview && syllabus.overview.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Overview</h5>
+                      <ul>
+                        {syllabus.overview.map((item: string, index: number) => (
+                          <li key={`overview-${index}`}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-          {syllabus.semesters && (
-            <>
-              <h5>Semesters</h5>
-              {syllabus.semesters.map((sem: SyllabusSemester, i: number) => (
-                <div key={`semester-${i}`}>
-                  <strong>{sem.name}</strong>
-                  <ul>
-                    {sem.courses.map((course: string, j: number) => (
-                      <li key={`course-${j}`}>{course}</li>
-                    ))}
-                  </ul>
+                  {syllabus.audience && syllabus.audience.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Who is this for?</h5>
+                      <ul>
+                        {syllabus.audience.map((item: string, index: number) => (
+                          <li key={`audience-${index}`}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {syllabus.semesters && syllabus.semesters.length > 0 && (
+                    <div className="syllabus-section" style={{ marginBottom: '20px' }}>
+                      <h5>Semesters</h5>
+                      {syllabus.semesters.map((sem: SyllabusSemester, i: number) => (
+                        <div key={`semester-${i}`} style={{ marginBottom: '10px' }}>
+                          <strong>{sem.name}</strong>
+                          <ul>
+                            {sem.courses.map((course: string, j: number) => (
+                              <li key={`course-${j}`}>{course}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </>
+              );
+            })()
+          ) : (
+            <p className="empty">No syllabus content available for this course.</p>
           )}
         </div>
-      );
-    })()
-  ) : (
-    <p className="empty">No syllabus content available for this course.</p>
-  )}
-</div>
-
       );
     }
     
@@ -568,6 +686,18 @@ export const CourseDetail: React.FC = () => {
       }
     }
     
+    if (activeTab === 'assignments') {
+      return (
+        <div className="course-assignments">
+          {courseId ? (
+            <CourseAssignments courseId={courseId} />
+          ) : (
+            <p className="empty">Course ID not found.</p>
+          )}
+        </div>
+      );
+    }
+    
     return null;
   };
   
@@ -584,13 +714,13 @@ export const CourseDetail: React.FC = () => {
       <div className="course-header">
         <h2>{course.Name}</h2>
         <div className="course-meta">
-          <span className="level">Level: {course.Level}</span>
-          <span className="enrollment">Students: {course.Enrollments.length}</span>
+          <span className="level">Section: {course.Section} | Year: {course.Year}</span>
+          <span className="enrollment">Students: {enrolledStudents.length}</span>
         </div>
       </div>
       
       <div className="tabs">
-        {['overview', 'syllabus', 'grades'].map(tab => (
+        {['overview', 'syllabus', 'grades', 'assignments'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as TabType)}

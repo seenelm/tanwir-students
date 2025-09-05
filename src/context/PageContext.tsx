@@ -1,5 +1,5 @@
 // src/context/PageContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface PageContextType {
   currentPage: string;
@@ -10,6 +10,12 @@ interface PageContextType {
   setAssignmentId: (id: string | null) => void;
   breadcrumbs: string[];
   setBreadcrumbs: (breadcrumbs: string[]) => void;
+  assignmentCourseId: string | null;
+  setAssignmentCourseId: (id: string | null) => void;
+  assignmentCourseName: string | null;
+  setAssignmentCourseName: (name: string | null) => void;
+  quizCourseId: string | null;
+  setQuizCourseId: (id: string | null) => void;
 }
 
 const PageContext = createContext<PageContextType>({
@@ -20,24 +26,103 @@ const PageContext = createContext<PageContextType>({
   assignmentId: null,
   setAssignmentId: () => {},
   breadcrumbs: [],
-  setBreadcrumbs: () => {}
+  setBreadcrumbs: () => {},
+  assignmentCourseId: null,
+  setAssignmentCourseId: () => {},
+  assignmentCourseName: null,
+  setAssignmentCourseName: () => {},
+  quizCourseId: null,
+  setQuizCourseId: () => {}
 });
+
+// Map URL paths to page names
+const pathToPageMap: Record<string, string> = {
+  '/home': 'Home',
+  '/courses': 'Courses',
+  '/videos': 'Videos',
+  '/settings': 'Settings',
+  '/scholarships': 'Financial Aid',
+  '/students': 'Students'
+};
 
 export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [currentPage, setCurrentPage] = useState('Home');
   const [courseId, setCourseId] = useState<string | null>(null);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Home']);
+  const [assignmentCourseId, setAssignmentCourseId] = useState<string | null>(null);
+  const [assignmentCourseName, setAssignmentCourseName] = useState<string | null>(null);
+  const [quizCourseId, setQuizCourseId] = useState<string | null>(null);
+  
+  // Initialize from current URL on first load
+  useEffect(() => {
+    const path = window.location.pathname;
+    const pageName = pathToPageMap[path] || 'Home';
+    setCurrentPage(pageName);
+    setBreadcrumbs([pageName]);
+  }, []);
+  
+  // Listen for browser back/forward button events
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const pageName = pathToPageMap[path] || 'Home';
+      
+      // Update state based on URL
+      setCurrentPage(pageName);
+      setBreadcrumbs([pageName]);
+      
+      // Reset other state when navigating to main pages
+      if (['Home', 'Courses', 'Videos', 'Settings'].includes(pageName)) {
+        // Clear courseId when not in course detail
+        if (pageName !== 'CourseDetail') {
+          setCourseId(null);
+        }
+        
+        // Clear assignment data when not in assignment detail
+        if (pageName !== 'AssignmentDetail') {
+          setAssignmentId(null);
+          setAssignmentCourseId(null);
+          setAssignmentCourseName(null);
+        }
+        
+        // Clear quiz data when not in quiz creation
+        if (pageName !== 'CreateQuiz') {
+          setQuizCourseId(null);
+        }
+      }
+    };
+
+    // Add event listener for popstate (browser back/forward)
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   const handleSetCurrentPage = (page: string) => {
     setCurrentPage(page);
     
     // Reset breadcrumbs when navigating to a main page
-    if (['Home', 'Courses', 'Assignments', 'Videos', 'Settings'].includes(page)) {
+    if (['Home', 'Courses', 'Videos', 'Settings'].includes(page)) {
       setBreadcrumbs([page]);
+      
       // Clear courseId when not in course detail
       if (page !== 'CourseDetail') {
         setCourseId(null);
+      }
+      
+      // Clear assignment data when not in assignment detail
+      if (page !== 'AssignmentDetail') {
+        setAssignmentId(null);
+        setAssignmentCourseId(null);
+        setAssignmentCourseName(null);
+      }
+      
+      // Clear quiz data when not in quiz creation
+      if (page !== 'CreateQuiz') {
+        setQuizCourseId(null);
       }
     }
   };
@@ -52,7 +137,13 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         assignmentId,
         setAssignmentId,
         breadcrumbs,
-        setBreadcrumbs
+        setBreadcrumbs,
+        assignmentCourseId,
+        setAssignmentCourseId,
+        assignmentCourseName,
+        setAssignmentCourseName,
+        quizCourseId,
+        setQuizCourseId
       }}
     >
       {children}

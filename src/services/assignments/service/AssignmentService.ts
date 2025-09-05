@@ -7,9 +7,15 @@ import {
   query,
   orderBy,
   QueryDocumentSnapshot,
+  addDoc,
+  updateDoc,
+  where,
+  Timestamp,
+  serverTimestamp,
 } from 'firebase/firestore';
-import { Assignment } from '../types/assignment';
+import { Assignment, QuizQuestion } from '../types/assignment';
 import { assignmentConverter } from '../model/assignment';
+import { auth } from '../../../config/firebase';
 
 // Interface for assignment summary (minimal data for listings)
 interface AssignmentSummary {
@@ -19,6 +25,20 @@ interface AssignmentSummary {
   CourseName: string;
   DueDate: Date;
   Points: number;
+}
+
+interface StudentGrade {
+  assignmentId: string;
+  assignmentTitle: string;
+  score: number;
+  totalPoints: number;
+  submittedAt: Date;
+}
+
+interface StudentGrades {
+  studentId: string;
+  studentName: string;
+  grades: StudentGrade[];
 }
 
 export class AssignmentService {
@@ -152,6 +172,88 @@ export class AssignmentService {
     return questions;
   }
   
+  async saveQuizResult(
+    assignmentId: string,
+    _userId: string, // not needed anymore
+    result: {
+      score: number;
+      totalPoints: number;
+      earnedPoints: number;
+      answers: Record<string, string>;
+      completed: boolean;
+      passed?: boolean;
+    }
+  ) {
+    try {
+      if (!auth.currentUser) throw new Error('Not signed in');
+  
+      const resultsRef = collection(this.db, `assignments/${assignmentId}/results`);
+      await addDoc(resultsRef, {
+        StudentId: auth.currentUser.uid,                // <-- matches rules
+        score: result.score,
+        totalPoints: result.totalPoints,
+        earnedPoints: result.earnedPoints,
+        answers: result.answers,
+        completed: result.completed,
+        passed: result.passed ?? null,
+        submittedAt: serverTimestamp()
+      });
+  
+      return true;
+    } catch (e) {
+      console.error('Error saving quiz result:', e);
+      return false;
+    }
+  }
+
+  async getUserQuizResult(assignmentId: string, userId: string) {
+    try {
+      console.log('getUserQuizResult called with:', { assignmentId, userId });
+      const resultsRef = collection(this.db, `assignments/${assignmentId}/results`);
+      
+      // Log all results in this subcollection for debugging
+      console.log('Checking all results in subcollection');
+      const allResults = await getDocs(resultsRef);
+      console.log('All results in subcollection:', { 
+        empty: allResults.empty, 
+        size: allResults.size,
+        docs: allResults.docs.map(d => ({ id: d.id, data: d.data() }))
+      });
+      
+      // Simplified query - only filter by StudentId without ordering
+      const q = query(
+        resultsRef,
+        where('StudentId', '==', userId)
+      );
+      
+      console.log('Query created:', q);
+      const snap = await getDocs(q);
+      console.log('Query results:', { empty: snap.empty, size: snap.size });
+      
+      if (snap.empty) return null;
+
+      // If we have multiple results, find the most recent one manually
+      let latestDoc = snap.docs[0];
+      let latestTimestamp = latestDoc.data().submittedAt;
+      
+      if (snap.size > 1) {
+        snap.docs.forEach(doc => {
+          const timestamp = doc.data().submittedAt;
+          if (timestamp && (!latestTimestamp || timestamp.seconds > latestTimestamp.seconds)) {
+            latestDoc = doc;
+            latestTimestamp = timestamp;
+          }
+        });
+      }
+      
+      const result = { id: latestDoc.id, ...(latestDoc.data() as any) };
+      console.log('Found quiz result:', result);
+      return result;
+    } catch (e) {
+      console.error('getUserQuizResult error', e);
+      return null;
+    }
+  }
 
   // Clear cache (useful for testing or when data might be stale)
   clearCache(): void {
@@ -161,5 +263,234 @@ export class AssignmentService {
     this.cachedDiscussions.clear();
     this.cachedQuestions.clear();
     console.log('All caches cleared');
+  }
+
+  // Get assignments for a specific course
+  async getAssignmentsByCourseId(courseId: string): Promise<Assignment[]> {
+    console.log(`Fetching assignments for course ID: ${courseId}`);
+    
+    // Get all assignment summaries
+    const summaries = await this.getAssignments();
+    
+    // Filter summaries by courseId
+    const courseAssignmentSummaries = summaries.filter(
+      summary => summary.CourseId === courseId
+    );
+    
+    // Fetch full assignment details for each summary
+    const assignments: Assignment[] = [];
+    for (const summary of courseAssignmentSummaries) {
+      const assignment = await this.getAssignmentById(summary.AssignmentId);
+      if (assignment) {
+        assignments.push(assignment);
+      }
+    }
+    
+    return assignments;
+  }
+
+  // Create a new quiz assignment
+  async createQuizAssignment(quizData: {
+    title: string;
+    description: string;
+    courseId: string;
+    courseName: string;
+    subject?: string;
+    dueDate: Date;
+    points: number;
+    questions: QuizQuestion[];
+    timeLimit?: number;
+    passingScore?: number;
+    createdBy: string;
+  }): Promise<string> {
+    console.log('Creating new quiz assignment');
+    
+    const newAssignment = {
+      Title: quizData.title,
+      Description: quizData.description,
+      CourseId: quizData.courseId,
+      CourseName: quizData.courseName,
+      Subject: quizData.subject || null,
+      DueDate: quizData.dueDate instanceof Date ? Timestamp.fromDate(quizData.dueDate) : new Date(),
+      Points: quizData.points,
+      CreatedBy: quizData.createdBy,
+      CreatedAt: new Date(),
+      AssignmentId: '', // This will be updated after document creation
+      type: 'quiz',
+      timeLimit: quizData.timeLimit || null,
+      passingScore: quizData.passingScore || null
+    };
+    
+    // Add the assignment document
+    const docRef = await addDoc(this.assignmentsCollection, newAssignment);
+    const assignmentId = docRef.id;
+    
+    // Update the document with its own ID
+    await updateDoc(docRef, {
+      AssignmentId: assignmentId
+    });
+    
+    // Add questions as subcollection
+    const questionsCollection = collection(this.db, `assignments/${assignmentId}/questions`);
+    for (const question of quizData.questions) {
+      await addDoc(questionsCollection, {
+        text: question.text,
+        points: question.points,
+        type: question.type,
+        options: question.options
+      });
+    }
+    
+    // Clear cache to ensure fresh data on next fetch
+    this.clearCache();
+    
+    return assignmentId;
+  }
+
+  // Get all quiz results for a specific student across all assignments in a course
+  async getStudentGradesForCourse(courseId: string, studentId: string): Promise<StudentGrade[]> {
+    try {
+      console.log(`Fetching grades for student ${studentId} in course ${courseId}`);
+      
+      // Get all assignments for this course
+      const courseAssignments = await this.getAssignmentsByCourseId(courseId);
+      
+      // Fetch results for each assignment
+      const grades: StudentGrade[] = [];
+      
+      for (const assignment of courseAssignments) {
+        try {
+          const result = await this.getUserQuizResult(assignment.AssignmentId, studentId);
+          
+          if (result) {
+            grades.push({
+              assignmentId: assignment.AssignmentId,
+              assignmentTitle: assignment.Title,
+              score: result.score || 0,
+              totalPoints: assignment.Points,
+              submittedAt: result.submittedAt?.toDate() || new Date()
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching result for assignment ${assignment.AssignmentId}:`, error);
+        }
+      }
+      
+      return grades;
+    } catch (error) {
+      console.error('Error fetching student grades:', error);
+      return [];
+    }
+  }
+  
+  // Get all quiz results for all students in a course
+  async getAllStudentGradesForCourse(courseId: string, enrolledStudents: any[]): Promise<StudentGrades[]> {
+    try {
+      console.log(`Fetching grades for all students in course ${courseId}`);
+      
+      // Get all assignments for this course
+      const courseAssignments = await this.getAssignmentsByCourseId(courseId);
+      
+      // Fetch results for each student
+      const allGrades: StudentGrades[] = [];
+      
+      for (const student of enrolledStudents) {
+        try {
+          const studentId = student.uid || student.id || student.studentId;
+          const studentName = student.displayName || 
+                             (student.studentInfo ? 
+                              `${student.studentInfo.firstName || ''} ${student.studentInfo.lastName || ''}`.trim() : 
+                              student.email || 'Unknown');
+          
+          const grades: StudentGrade[] = [];
+          
+          for (const assignment of courseAssignments) {
+            try {
+              const result = await this.getUserQuizResult(assignment.AssignmentId, studentId);
+              
+              if (result) {
+                grades.push({
+                  assignmentId: assignment.AssignmentId,
+                  assignmentTitle: assignment.Title,
+                  score: result.score || 0,
+                  totalPoints: assignment.Points,
+                  submittedAt: result.submittedAt?.toDate() || new Date()
+                });
+              }
+            } catch (error) {
+              console.error(`Error fetching result for student ${studentId}, assignment ${assignment.AssignmentId}:`, error);
+            }
+          }
+          
+          if (grades.length > 0) {
+            allGrades.push({
+              studentId,
+              studentName,
+              grades
+            });
+          }
+        } catch (error) {
+          console.error(`Error processing student:`, error);
+        }
+      }
+      
+      return allGrades;
+    } catch (error) {
+      console.error('Error fetching all student grades:', error);
+      return [];
+    }
+  }
+  
+  // Get all results for a specific assignment
+  async getAllResultsForAssignment(assignmentId: string): Promise<any[]> {
+    try {
+      console.log(`Fetching all results for assignment ${assignmentId}`);
+      const resultsRef = collection(this.db, `assignments/${assignmentId}/results`);
+      const snapshot = await getDocs(resultsRef);
+      
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        submittedAt: doc.data().submittedAt?.toDate() || new Date()
+      }));
+    } catch (error) {
+      console.error(`Error fetching results for assignment ${assignmentId}:`, error);
+      return [];
+    }
+  }
+
+  // Get all quiz results for a course in a single batch
+  async getAllQuizResultsForCourse(courseId: string): Promise<Record<string, any[]>> {
+    try {
+      console.log(`Fetching all quiz results for course ${courseId} in batch`);
+      
+      // Get all assignments for this course
+      const courseAssignments = await this.getAssignmentsByCourseId(courseId);
+      
+      // Create a map to store results by assignment
+      const resultsByAssignment: Record<string, any[]> = {};
+      
+      // Fetch results for each assignment in parallel
+      await Promise.all(courseAssignments.map(async (assignment) => {
+        try {
+          const resultsRef = collection(this.db, `assignments/${assignment.AssignmentId}/results`);
+          const snapshot = await getDocs(resultsRef);
+          
+          resultsByAssignment[assignment.AssignmentId] = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            submittedAt: doc.data().submittedAt?.toDate() || new Date()
+          }));
+        } catch (error) {
+          console.error(`Error fetching results for assignment ${assignment.AssignmentId}:`, error);
+          resultsByAssignment[assignment.AssignmentId] = [];
+        }
+      }));
+      
+      return resultsByAssignment;
+    } catch (error) {
+      console.error('Error fetching all quiz results:', error);
+      return {};
+    }
   }
 }

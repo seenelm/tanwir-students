@@ -21,6 +21,7 @@ export interface AuthorizedUser {
   Role: UserRole;
   email?: string;
   password?: string;
+  courses?: { courseRef: string }[];
 }
 
 export class AuthService {
@@ -259,7 +260,6 @@ export class AuthService {
       ...doc.data() as AuthorizedUser,
       uid: doc.id  
     }));
-    console.log('Fetched users with document IDs:', users);
     return users;
   }
 
@@ -289,6 +289,97 @@ export class AuthService {
     
     const userData = await this.getUserData(user.uid);
     return userData?.Role || null;
+  }
+
+  async getUserEnrolledCourses(): Promise<string[]> {
+    const user = this.getCurrentUser();
+    if (!user) {
+      console.log('getUserEnrolledCourses: No current user found');
+      return [];
+    }
+    
+    try {
+      console.log('getUserEnrolledCourses: Fetching data for user', user.uid);
+      
+      // Direct Firestore query to check the exact structure
+      const userDocRef = doc(this.db, 'authorizedUsers', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (!userDocSnap.exists()) {
+        console.log('getUserEnrolledCourses: User document does not exist');
+        return [];
+      }
+      
+      const userData = userDocSnap.data();
+      console.log('getUserEnrolledCourses: Raw user data from Firestore:', JSON.stringify(userData));
+      
+      // Handle different possible structures
+      let courseRefs: string[] = [];
+      
+      if (userData.courses) {
+        console.log('getUserEnrolledCourses: Found courses array in user data');
+        
+        // Try to extract course references from the courses array
+        courseRefs = userData.courses.map((course: any) => {
+          console.log('Course item structure:', course);
+          
+          let courseRef: string | null = null;
+          
+          // Handle different possible structures
+          if (typeof course === 'string') {
+            // If the course is directly a string reference
+            courseRef = course;
+          } else if (course.courseRef) {
+            // If the course has a courseRef property
+            courseRef = course.courseRef;
+          } else if (course.id) {
+            // If the course has an id property
+            courseRef = course.id;
+          } else if (course.Id) {
+            // If the course has an Id property
+            courseRef = course.Id;
+          } else {
+            console.log('Unknown course reference structure:', course);
+            return null;
+          }
+          
+          // Extract just the document ID from the path if it contains a slash
+          if (courseRef && courseRef.includes('/')) {
+            const parts = courseRef.split('/');
+            courseRef = parts[parts.length - 1];
+            console.log(`Extracted document ID '${courseRef}' from path`);
+          }
+          
+          return courseRef;
+        }).filter(Boolean); // Remove any null values
+      } else if (userData.courseRefs) {
+        // Alternative: courses might be stored as courseRefs array
+        console.log('getUserEnrolledCourses: Found courseRefs array in user data');
+        courseRefs = userData.courseRefs.map((ref: string) => {
+          if (ref.includes('/')) {
+            const parts = ref.split('/');
+            return parts[parts.length - 1];
+          }
+          return ref;
+        });
+      } else if (userData.enrolledCourses) {
+        // Another alternative: might be stored as enrolledCourses
+        console.log('getUserEnrolledCourses: Found enrolledCourses array in user data');
+        courseRefs = userData.enrolledCourses.map((ref: string) => {
+          if (ref.includes('/')) {
+            const parts = ref.split('/');
+            return parts[parts.length - 1];
+          }
+          return ref;
+        });
+      }
+      
+      console.log('getUserEnrolledCourses: Final course refs', courseRefs);
+      return courseRefs;
+    } catch (error) {
+      console.error('Error fetching user enrolled courses:', error);
+      return [];
+    }
   }
 
   async findUserByEmail(email: string): Promise<{ id: string, data: AuthorizedUser } | null> {
