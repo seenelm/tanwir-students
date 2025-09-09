@@ -14,7 +14,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
     setCurrentPage, 
     setCourseId,
     setBreadcrumbs,
-    quizCourseId
+    quizCourseId,
+    courseId,
+    assignmentCourseId
   } = usePage();
   const [user, setUser] = useState<any>(null);
   
@@ -54,9 +56,53 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
     if (index === 0) {
       setCurrentPage(breadcrumbs[0]);
     }
-    // If clicking on the course name (middle breadcrumb in assignment detail or quiz creation)
+    // If clicking on the course name (middle breadcrumb in assignment detail, attachment view, or quiz creation)
     else if (index === 1 && breadcrumbs.length > 2) {
-      // Get the course ID from the assignment or quiz
+      // When in attachment view, use the current courseId directly
+      if (currentPage === 'attachment' && courseId) {
+        console.log('Navigating directly to course with ID:', courseId);
+        // Navigate directly to course detail using the existing courseId
+        setCurrentPage('CourseDetail');
+        
+        // Get the course name from the breadcrumb
+        const courseName = typeof crumb === 'string' ? crumb : '';
+        
+        // Update breadcrumbs to remove the attachment name
+        setBreadcrumbs(['Courses', courseName]);
+        
+        // No need to look up the course by name, we already have the ID
+        return;
+      }
+      
+      // When in assignment detail view, use the assignmentCourseId directly
+      if (currentPage === 'AssignmentDetail' && assignmentCourseId) {
+        console.log('Navigating directly to course with ID:', assignmentCourseId);
+        // Navigate directly to course detail using the existing assignmentCourseId
+        setCourseId(assignmentCourseId);
+        setCurrentPage('CourseDetail');
+        
+        // Update breadcrumbs to remove the assignment name
+        setBreadcrumbs(['Courses', crumb]);
+        
+        // No need to look up the course by name, we already have the ID
+        return;
+      }
+      
+      // When in quiz creation view, use the quizCourseId directly
+      if (currentPage === 'CreateQuiz' && quizCourseId) {
+        console.log('Navigating directly to course with ID:', quizCourseId);
+        // Navigate directly to course detail using the existing quizCourseId
+        setCourseId(quizCourseId);
+        setCurrentPage('CourseDetail');
+        
+        // Update breadcrumbs to remove the quiz creation
+        setBreadcrumbs(['Courses', crumb]);
+        
+        // No need to look up the course by name, we already have the ID
+        return;
+      }
+      
+      // For other pages, fall back to the name lookup
       const courseService = CourseService.getInstance();
       courseService.getCourseByName(crumb)
         .then(course => {
@@ -84,10 +130,10 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
               const isCourseBreadcrumb = index === 1 && breadcrumbs.length > 2;
               
               // First breadcrumb is always clickable unless it's the current page
-              // Course breadcrumb is clickable when viewing an assignment or creating a quiz
+              // Course breadcrumb is clickable when viewing an assignment, attachment, or creating a quiz
               const isClickable = 
                 (index === 0 && !isLastBreadcrumb) || 
-                (isCourseBreadcrumb && (currentPage === 'AssignmentDetail' || currentPage === 'CreateQuiz'));
+                (isCourseBreadcrumb && (currentPage === 'AssignmentDetail' || currentPage === 'CreateQuiz' || currentPage === 'attachment'));
               
               return (
                 <React.Fragment key={index}>

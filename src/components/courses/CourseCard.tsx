@@ -45,7 +45,14 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       }
       footer={
         <>
-          <div>Created by: {createdBy}</div>
+          <div className="instructors-list">
+            <div className="instructor-label">Taught by:</div>
+            {createdBy.split(',').map((instructor, index) => (
+              <div key={index} className="instructor-name">
+                {instructor.trim()}
+              </div>
+            ))}
+          </div>
         </>
       }
       onClick={handleCardClick}

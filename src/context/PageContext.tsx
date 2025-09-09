@@ -8,6 +8,8 @@ interface PageContextType {
   setCourseId: (id: string | null) => void;
   assignmentId: string | null;
   setAssignmentId: (id: string | null) => void;
+  attachmentId: string | null;
+  setAttachmentId: (id: string | null) => void;
   breadcrumbs: string[];
   setBreadcrumbs: (breadcrumbs: string[]) => void;
   assignmentCourseId: string | null;
@@ -16,6 +18,7 @@ interface PageContextType {
   setAssignmentCourseName: (name: string | null) => void;
   quizCourseId: string | null;
   setQuizCourseId: (id: string | null) => void;
+  setPage: (page: string, params?: Record<string, string>) => void;
 }
 
 const PageContext = createContext<PageContextType>({
@@ -25,6 +28,8 @@ const PageContext = createContext<PageContextType>({
   setCourseId: () => {},
   assignmentId: null,
   setAssignmentId: () => {},
+  attachmentId: null,
+  setAttachmentId: () => {},
   breadcrumbs: [],
   setBreadcrumbs: () => {},
   assignmentCourseId: null,
@@ -32,7 +37,8 @@ const PageContext = createContext<PageContextType>({
   assignmentCourseName: null,
   setAssignmentCourseName: () => {},
   quizCourseId: null,
-  setQuizCourseId: () => {}
+  setQuizCourseId: () => {},
+  setPage: () => {}
 });
 
 // Map URL paths to page names
@@ -67,6 +73,7 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [currentPage, setCurrentPage] = useState(getInitialPage());
   const [courseId, setCourseId] = useState<string | null>(null);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
+  const [attachmentId, setAttachmentId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([getInitialPage()]);
 
   // Update URL when page changes
@@ -122,6 +129,11 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
           setAssignmentCourseName(null);
         }
         
+        // Clear attachment data when not in attachment viewer
+        if (pageName !== 'attachment') {
+          setAttachmentId(null);
+        }
+        
         // Clear quiz data when not in quiz creation
         if (pageName !== 'CreateQuiz') {
           setQuizCourseId(null);
@@ -156,10 +168,61 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         setAssignmentCourseName(null);
       }
       
+      // Clear attachment data when not in attachment viewer
+      if (page !== 'attachment') {
+        setAttachmentId(null);
+      }
+      
       // Clear quiz data when not in quiz creation
       if (page !== 'CreateQuiz') {
         setQuizCourseId(null);
       }
+    }
+  };
+
+  // Helper function to set page and related parameters in one call
+  const setPage = (page: string, params?: Record<string, string>) => {
+    setCurrentPage(page);
+    
+    if (params) {
+      // Set courseId if provided
+      if (params.courseId) {
+        setCourseId(params.courseId);
+      }
+      
+      // Set assignmentId if provided
+      if (params.assignmentId) {
+        setAssignmentId(params.assignmentId);
+      }
+      
+      // Set attachmentId if provided
+      if (params.attachmentId) {
+        setAttachmentId(params.attachmentId);
+      }
+      
+      // Set other parameters as needed
+      if (params.assignmentCourseId) {
+        setAssignmentCourseId(params.assignmentCourseId);
+      }
+      
+      if (params.assignmentCourseName) {
+        setAssignmentCourseName(params.assignmentCourseName);
+      }
+      
+      if (params.quizCourseId) {
+        setQuizCourseId(params.quizCourseId);
+      }
+    }
+    
+    // Update breadcrumbs based on the page
+    if (page === 'course') {
+      setBreadcrumbs(['Courses', 'Course Detail']);
+    } else if (page === 'assignmentDetail') {
+      setBreadcrumbs(['Courses', 'Course Detail', 'Assignment']);
+    } else if (page === 'attachment') {
+      setBreadcrumbs(['Courses', 'Course Detail', 'Attachment']);
+    } else if (['Home', 'Courses', 'Videos', 'Settings', 'Financial Aid', 'Students'].includes(page)) {
+      setBreadcrumbs([page]);
     }
   };
 
@@ -172,6 +235,8 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         setCourseId, 
         assignmentId, 
         setAssignmentId,
+        attachmentId,
+        setAttachmentId,
         breadcrumbs,
         setBreadcrumbs,
         assignmentCourseId,
@@ -179,7 +244,8 @@ export const PageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         assignmentCourseName,
         setAssignmentCourseName,
         quizCourseId,
-        setQuizCourseId
+        setQuizCourseId,
+        setPage
       }}
     >
       {children}

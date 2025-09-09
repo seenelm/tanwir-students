@@ -26,6 +26,15 @@ export interface CourseEventData {
   locationType: string[];
 }
 
+export interface CourseAttachment {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  source?: 'drive' | 'upload'; // Indicates if this is a drive link or uploaded file
+  uploadedAt?: any;
+}
+
 export interface Course {
   Id: string;  // Keep uppercase Id for compatibility with existing code
   name: string;
@@ -36,6 +45,7 @@ export interface Course {
   year?: string;
   syllabus?: string;
   subjects?: string[];  // Array of subjects for the course
+  attachments?: CourseAttachment[]; // Array of course attachments
   // Add these for compatibility with existing code
   Name?: string;      // Alias for name
   Description?: string; // Alias for description
@@ -45,6 +55,7 @@ export interface Course {
   Year?: string;        // Alias for year
   Syllabus?: string;    // Alias for syllabus
   Subjects?: string[];  // Uppercase alias for subjects
+  Attachments?: CourseAttachment[]; // Uppercase alias for attachments
   Enrollments?: any[];  // Keep for compatibility
   Level?: number;       // Keep for compatibility
 }

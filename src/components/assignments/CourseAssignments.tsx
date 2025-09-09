@@ -47,7 +47,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId }
     return (
       <div className="course-assignments">
         <div className="assignments-header">
-          <h2>Assignments</h2>
+          <h3>Assignments</h3>
           {isAdmin && (
             <button 
               className="create-quiz-btn" 
@@ -57,7 +57,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId }
             </button>
           )}
         </div>
-        <div className="no-assignments">No assignments for this course yet.</div>
+        <p className="empty">No assignments available yet.</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId }
   return (
     <div className="course-assignments">
       <div className="assignments-header">
-        <h2>Assignments</h2>
+        <h3>Assignments</h3>
         {isAdmin && (
           <button 
             className="create-quiz-btn" 

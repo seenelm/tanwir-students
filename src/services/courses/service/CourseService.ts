@@ -30,6 +30,8 @@ export class CourseService {
           Syllabus: data.Syllabus || data.syllabus || '',
           subjects: data.subjects || data.Subjects || [],
           Subjects: data.Subjects || data.subjects || [],
+          attachments: data.attachments || data.Attachments || [],
+          Attachments: data.Attachments || data.attachments || [],
           Enrollments: data.Enrollments || []
         };
       });
@@ -86,6 +88,8 @@ export class CourseService {
           Syllabus: courseData.Syllabus || courseData.syllabus || '',
           subjects: courseData.subjects || courseData.Subjects || [],
           Subjects: courseData.Subjects || courseData.subjects || [],
+          attachments: courseData.attachments || courseData.Attachments || [],
+          Attachments: courseData.Attachments || courseData.attachments || [],
           Enrollments: courseData.Enrollments || []
         };
         
@@ -128,10 +132,25 @@ export class CourseService {
   async getCourseByName(courseName: string): Promise<Course | null> {
     console.log('CourseService.getCourseByName called with:', courseName);
     
-    // First check the cache
-    const cachedCourse = this.cachedCourses.find(
-      course => course.name === courseName || course.Name === courseName
-    );
+    // Check if the course name includes year information (e.g., "Prophetic Guidance - Year 2")
+    const yearMatch = courseName.match(/Year (\d+)/i);
+    const yearNumber = yearMatch ? yearMatch[1] : null;
+    const baseName = courseName.replace(/\s*-?\s*Year \d+/i, '').trim();
+    
+    console.log(`Parsed course name: base="${baseName}", year=${yearNumber}`);
+    
+    // First check the cache with year-specific matching if applicable
+    let cachedCourse = this.cachedCourses.find(course => {
+      // If we have a year number, match both name and year
+      if (yearNumber) {
+        const nameMatches = course.name === baseName || course.Name === baseName;
+        const yearMatches = course.year === yearNumber || course.Year === yearNumber;
+        return nameMatches && yearMatches;
+      } else {
+        // Otherwise just match by the full name
+        return course.name === courseName || course.Name === courseName;
+      }
+    });
     
     if (cachedCourse) {
       console.log('CourseService.getCourseByName: Found course in cache', cachedCourse.name);
@@ -162,13 +181,22 @@ export class CourseService {
           Syllabus: data.Syllabus || data.syllabus || '',
           subjects: data.subjects || data.Subjects || [],
           Subjects: data.Subjects || data.subjects || [],
+          attachments: data.attachments || data.Attachments || [],
+          Attachments: data.Attachments || data.attachments || [],
           Enrollments: data.Enrollments || []
         };
       });
       
-      const foundCourse = courses.find(
-        course => course.name === courseName || course.Name === courseName
-      );
+      // Find course with year-specific matching if applicable
+      const foundCourse = courses.find(course => {
+        if (yearNumber) {
+          const nameMatches = course.name === baseName || course.Name === baseName;
+          const yearMatches = course.year === yearNumber || course.Year === yearNumber;
+          return nameMatches && yearMatches;
+        } else {
+          return course.name === courseName || course.Name === courseName;
+        }
+      });
       
       return foundCourse || null;
     } catch (error) {

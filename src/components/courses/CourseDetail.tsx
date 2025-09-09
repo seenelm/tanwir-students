@@ -6,6 +6,8 @@ import { AuthService, UserRole } from '../../services/auth';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { CourseAssignments } from '../assignments/CourseAssignments';
 import { EmailService } from '../../services/email/emailService';
+import { CourseAttachments } from './CourseAttachments';
+import { DriveAttachmentForm } from './DriveAttachmentForm';
 
 // Syllabus data structure
 interface SyllabusSemester {
@@ -37,7 +39,7 @@ interface SyllabusData {
   title: string;
   classTime?: string;
   timeframe?: string;
-  instructors?: string[];
+  instructors?: string[] | string;
   format?: string;
   prerequisites?: string;
   programOverview?: string;
@@ -54,7 +56,7 @@ interface SyllabusData {
   semesters?: SyllabusSemester[];
 }
 
-type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments';
+type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments' | 'attachments';
 
 interface StudentGrade {
   assignmentId: string;
@@ -82,6 +84,7 @@ export const CourseDetail: React.FC = () => {
   const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showAttachmentForm, setShowAttachmentForm] = useState(false);
   const { courseId } = usePage();
   
   useEffect(() => {
@@ -417,8 +420,18 @@ export const CourseDetail: React.FC = () => {
                     {syllabus.timeframe && (
                       <p><strong>Timeframe:</strong> {syllabus.timeframe}</p>
                     )}
-                    {syllabus.instructors && (
-                      <p><strong>Instructors:</strong> {Array.isArray(syllabus.instructors) ? syllabus.instructors.join(', ') : syllabus.instructors}</p>
+                    {syllabus.instructors && course && (
+                      <div className="instructors-section">
+                        <p><strong>Instructors:</strong></p>
+                        <ul className="instructors-list">
+                          {course.CreatedBy ? 
+                            course.CreatedBy.split(',').map((instructor, idx) => (
+                              <li key={`instructor-${idx}`}>{instructor.trim()}</li>
+                            ))
+                            : <li>No instructor information available</li>
+                          }
+                        </ul>
+                      </div>
                     )}
                     {syllabus.format && (
                       <p><strong>Format:</strong> {syllabus.format}</p>
@@ -739,6 +752,44 @@ export const CourseDetail: React.FC = () => {
       );
     }
     
+    if (activeTab === 'attachments') {
+      return (
+        <div className="course-attachments-container">
+          <div className="attachments-header">
+            <h3>Course Attachments</h3>
+            {userRole === 'admin' && (
+              <button 
+                className="add-attachment-btn" 
+                onClick={() => setShowAttachmentForm(!showAttachmentForm)}
+              >
+                {showAttachmentForm ? 'Cancel' : 'Add Attachment'}
+              </button>
+            )}
+          </div>
+          
+          {userRole === 'admin' && showAttachmentForm && (
+            <div className="attachment-form-container">
+              <DriveAttachmentForm 
+                courseId={courseId || ''} 
+                onAttachmentAdded={() => {
+                  // Refresh course data when a new attachment is added
+                  const courseService = CourseService.getInstance();
+                  courseService.getCourseById(courseId || '').then(refreshedCourse => {
+                    if (refreshedCourse) {
+                      setCourse(refreshedCourse);
+                      setShowAttachmentForm(false); // Hide form after successful submission
+                    }
+                  });
+                }}
+              />
+            </div>
+          )}
+          
+          <CourseAttachments attachments={course?.Attachments || []} />
+        </div>
+      );
+    }
+    
     return null;
   };
   
@@ -761,7 +812,7 @@ export const CourseDetail: React.FC = () => {
       </div>
       
       <div className="tabs">
-        {['overview', 'syllabus', 'grades', 'assignments'].map(tab => (
+        {['overview', 'grades', 'assignments', 'attachments'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as TabType)}

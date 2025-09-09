@@ -5,6 +5,7 @@ import { Assignments } from './assignments/Assignments';
 import { Videos } from './videos/Videos';
 import { CourseDetail } from './courses/CourseDetail';
 import { AssignmentDetail } from './assignments/AssignmentDetail';
+import { AttachmentViewer } from './courses/AttachmentViewer';
 import { Scholarships } from './scholarships/Scholarships';
 import { Students } from './admin/Students';
 import QuizCreation from './admin/QuizCreation';
@@ -59,6 +60,8 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         return <CourseDetail />;
       case 'assignmentdetail':
         return <AssignmentDetail />;
+      case 'attachment':
+        return <AttachmentViewer />;
       case 'createquiz':
         // Only allow admin users to access the quiz creation page
         if (userRole === 'admin') {

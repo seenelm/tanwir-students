@@ -8,6 +8,7 @@ interface CardProps {
   children?: React.ReactNode;
   onClick?: () => void;
   imageUrl?: string;
+  icon?: React.ReactNode;
 }
 
 export const Card: React.FC<CardProps> = ({ 
@@ -17,7 +18,8 @@ export const Card: React.FC<CardProps> = ({
   footer, 
   children,
   onClick,
-  imageUrl
+  imageUrl,
+  icon
 }) => {
   return (
     <div 
@@ -30,8 +32,11 @@ export const Card: React.FC<CardProps> = ({
         </div>
       )}
       <div className="card-header">
-        <h3>{title}</h3>
-        {subtitle && <h5 className="card-subtitle">{subtitle}</h5>}
+        {icon && <div className="card-icon">{icon}</div>}
+        <div className="card-title-container">
+          <h3>{title}</h3>
+          {subtitle && <h5 className="card-subtitle">{subtitle}</h5>}
+        </div>
       </div>
       {description && <div className="card-description">{description}</div>}
       <div className="card-body">{children}</div>
