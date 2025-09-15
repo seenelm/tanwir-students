@@ -1,45 +1,33 @@
 import React from 'react';
 
-
-interface Playlist {
-  id: string;
-  name: string;
-  description: string;
+interface VideosProps {
+  playlistId?: string;
 }
 
-const playlists: Playlist[] = [
-  {
-    id: 'PLQ5POsRxrza1NO0_aFr6NE9Wj9zlfur8t',
-    name: 'PG: Foundations 24/25',
-    description: 'Foundation classes for the 2024-25 academic year',
-  },
-  {
-    id: 'PLQ5POsRxrza15-sldnWjtmWvqEohvY7aD',
-    name: 'Extended Studies',
-    description: 'Extended studies classes and additional materials',
-  },
-];
+export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
+  console.log('Videos component - playlistId:', playlistId);
 
-export const Videos: React.FC = () => {
+  // If no playlist ID is provided, show a message
+  if (!playlistId) {
+    return (
+        <p className="empty">No video playlist available for this course.</p>
+    );
+  }
+
   return (
-    <div className="videos-container">
-      {playlists.map((playlist) => (
-        <div key={playlist.id} className="playlist-section">
-          <h2 className="playlist-title">{playlist.name}</h2>
-          <p className="playlist-description">{playlist.description}</p>
-          <div className="video-wrapper">
-            <iframe
-              width="100%"
-              height="360"
-              src={`https://www.youtube.com/embed/videoseries?list=${playlist.id}`}
-              title={playlist.name}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
+
+      <div className="playlist-section">
+        <div className="video-wrapper">
+          <iframe
+            width="100%"
+            height="480"
+            src={`https://www.youtube.com/embed/videoseries?list=${playlistId}`}
+            title="Course Videos"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
         </div>
-      ))}
-    </div>
+      </div>
   );
 };

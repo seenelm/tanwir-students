@@ -8,6 +8,7 @@ import { CourseAssignments } from '../assignments/CourseAssignments';
 import { EmailService } from '../../services/email/emailService';
 import { CourseAttachments } from './CourseAttachments';
 import { DriveAttachmentForm } from './DriveAttachmentForm';
+import { Videos } from '../videos/Videos';
 
 // Syllabus data structure
 interface SyllabusSemester {
@@ -56,7 +57,7 @@ interface SyllabusData {
   semesters?: SyllabusSemester[];
 }
 
-type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments' | 'attachments';
+type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments' | 'attachments' | 'videos';
 
 interface StudentGrade {
   assignmentId: string;
@@ -790,6 +791,15 @@ export const CourseDetail: React.FC = () => {
       );
     }
     
+    if (activeTab === 'videos') {
+      return (
+        <div className="course-videos">
+          <h3>Course Videos</h3>
+          <Videos playlistId={course?.playlist} />
+        </div>
+      );
+    }
+    
     return null;
   };
   
@@ -812,15 +822,15 @@ export const CourseDetail: React.FC = () => {
       </div>
       
       <div className="tabs">
-        {['overview', 'grades', 'assignments', 'attachments'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as TabType)}
-            className={activeTab === tab ? 'active' : ''}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+          {['overview', 'syllabus', 'grades', 'assignments', 'attachments', 'videos'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as TabType)}
+              className={activeTab === tab ? 'active' : ''}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
       </div>
       
       {renderContent()}

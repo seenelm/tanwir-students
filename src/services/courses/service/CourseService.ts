@@ -30,6 +30,7 @@ export class CourseService {
           Syllabus: data.Syllabus || data.syllabus || '',
           subjects: data.subjects || data.Subjects || [],
           Subjects: data.Subjects || data.subjects || [],
+          playlist: data.playlist || '',
           attachments: data.attachments || data.Attachments || [],
           Attachments: data.Attachments || data.attachments || [],
           Enrollments: data.Enrollments || []

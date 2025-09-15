@@ -338,7 +338,7 @@ button:hover {
 
 .course-detail {
   padding: 20px;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -459,6 +459,12 @@ button:hover {
   
   .course-students {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .course-detail {
+    max-width: 400px;
   }
 }
 
