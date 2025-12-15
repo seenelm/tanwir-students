@@ -341,38 +341,40 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
         <div className="attendance-summary">
           <h4>Student Attendance Summary</h4>
           {attendanceSummary.length > 0 ? (
-            <table className="summary-table">
-              <thead>
-                <tr>
-                  <th>Student Name</th>
-                  <th>Total Classes</th>
-                  <th>Present</th>
-                  <th>Absent</th>
-                  <th>Late</th>
-                  <th>Excused</th>
-                  <th>Attendance Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceSummary.map(summary => (
-                  <tr key={summary.StudentId}>
-                    <td>{summary.StudentName}</td>
-                    <td>{summary.TotalClasses}</td>
-                    <td className="status-present">{summary.Present}</td>
-                    <td className="status-absent">{summary.Absent}</td>
-                    <td className="status-late">{summary.Late}</td>
-                    <td className="status-excused">{summary.Excused}</td>
-                    <td>
-                      <span className={`rate ${summary.AttendanceRate >= 80 ? 'good' : summary.AttendanceRate >= 60 ? 'warning' : 'poor'}`}>
-                        {summary.AttendanceRate}%
-                      </span>
-                    </td>
+            <div className="table-scroll-container">
+              <table className="summary-table">
+                <thead>
+                  <tr>
+                    <th>Student Name</th>
+                    <th>Total Classes</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Late</th>
+                    <th>Excused</th>
+                    <th>Attendance Rate</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {attendanceSummary.map(summary => (
+                    <tr key={summary.StudentId}>
+                      <td>{summary.StudentName}</td>
+                      <td>{summary.TotalClasses}</td>
+                      <td className="status-present">{summary.Present}</td>
+                      <td className="status-absent">{summary.Absent}</td>
+                      <td className="status-late">{summary.Late}</td>
+                      <td className="status-excused">{summary.Excused}</td>
+                      <td>
+                        <span className={`rate ${summary.AttendanceRate >= 80 ? 'good' : summary.AttendanceRate >= 60 ? 'warning' : 'poor'}`}>
+                          {summary.AttendanceRate}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <p className="empty">No attendance data available. Create a class session to start tracking attendance.</p>
+            <p className="empty">No attendance data available yet.</p>
           )}
         </div>
       )}
