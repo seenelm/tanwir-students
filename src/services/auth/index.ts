@@ -5,7 +5,7 @@ import { UserRole, AuthorizedUser } from './types';
 
 export interface IAuthService {
   getAllUsers(): Promise<AuthorizedUser[]>;
-  getUserRole(): Promise<UserRole | null>;
+  getUserRole(uid?: string): Promise<UserRole | null>;
   getCurrentUser(): any;
 }
 
@@ -45,14 +45,29 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async getUserRole(): Promise<UserRole | null> {
+  async getUserRole(uid?: string): Promise<UserRole | null> {
     try {
-      const user = auth.currentUser;
-      if (!user) return null;
+      const userId = uid || auth.currentUser?.uid;
+      if (!userId) {
+        console.log('getUserRole: No user ID available');
+        return null;
+      }
 
-      const userDoc = await getDocs(collection(db, 'users'));
-      const userData = userDoc.docs.find(doc => doc.id === user.uid);
-      return userData?.data().role || null;
+      console.log('getUserRole: Checking role for user:', userId);
+      const usersCollection = collection(db, 'authorizedUsers');
+      const userDocs = await getDocs(usersCollection);
+      const userData = userDocs.docs.find(doc => doc.id === userId);
+      
+      if (!userData) {
+        console.log('getUserRole: User not found in authorizedUsers');
+        return null;
+      }
+      
+      const data = userData.data();
+      const role = data.Role || data.role || null;
+      console.log('getUserRole: Found role:', role, 'for user:', userId);
+      
+      return role as UserRole;
     } catch (error) {
       console.error('Error getting user role:', error);
       return null;

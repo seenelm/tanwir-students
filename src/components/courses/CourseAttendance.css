@@ -1,0 +1,639 @@
+.course-attendance {
+  padding: 2rem;
+  background: var(--surface-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.attendance-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--card-background);
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.view-toggle button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.view-toggle button:hover {
+  background: var(--hover-background);
+}
+
+.view-toggle button.active {
+  background: var(--surface-color);
+  color: var(--primary-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Summary View */
+.attendance-summary {
+  margin-top: 1.5rem;
+}
+
+.attendance-summary h4 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: var(--surface-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.summary-table thead {
+  background: var(--primary-color);
+  color: white;
+}
+
+.summary-table th,
+.summary-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.summary-table tbody tr:hover {
+  background: var(--hover-background);
+}
+
+.summary-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.status-present {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.status-absent {
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+.status-late {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.status-excused {
+  color: var(--info-color);
+  font-weight: 600;
+}
+
+.rate {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.rate.good {
+  background: var(--primary-light);
+  color: var(--success-color);
+}
+
+.rate.warning {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.rate.poor {
+  background: var(--error-light);
+  color: var(--error-color);
+}
+
+/* Sessions View */
+.attendance-sessions {
+  margin-top: 1.5rem;
+}
+
+.add-session-section {
+  margin-bottom: 2rem;
+}
+
+.add-session-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.add-session-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 144, 120, 0.3);
+}
+
+.add-session-form {
+  background: var(--surface-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.add-session-form h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 144, 120, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--surface-color);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover {
+  background: var(--hover-background);
+}
+
+/* Sessions List */
+.sessions-list {
+  margin-top: 2rem;
+}
+
+.sessions-list h4 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.session-card {
+  background: var(--surface-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.session-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.session-card.selected {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+  box-shadow: 0 4px 12px rgba(0, 144, 120, 0.2);
+}
+
+.session-card.active-session {
+  border-color: var(--success-color);
+  background: var(--success-light);
+}
+
+.session-card.active-session.selected {
+  background: var(--success-light);
+}
+
+.session-date {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.session-topic {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.session-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.session-status-badge {
+  margin-top: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.session-status-badge.active {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.session-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-open-session,
+.btn-close-session {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-open-session {
+  background: var(--success-color);
+  color: white;
+}
+
+.btn-open-session:hover {
+  background: var(--success-hover);
+}
+
+.btn-close-session {
+  background: var(--warning-color);
+  color: white;
+}
+
+.btn-close-session:hover {
+  background: var(--warning-hover);
+}
+
+/* Session Attendance Table */
+.session-attendance {
+  margin-top: 2rem;
+  background: var(--surface-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.session-attendance h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.attendance-table thead {
+  background: var(--surface-color);
+}
+
+.attendance-table th,
+.attendance-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.attendance-table tbody tr:hover {
+  background: var(--hover-background);
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-badge.status-present {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-badge.status-absent {
+  background: var(--error-light);
+  color: var(--error-color);
+}
+
+.status-badge.status-late {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.status-badge.status-excused {
+  background: var(--info-light);
+  color: var(--info-color);
+}
+
+.status-badge.status-unmarked {
+  background: var(--surface-color);
+  color: var(--text-secondary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-status {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-status:hover {
+  background: var(--hover-background);
+}
+
+.btn-status.active {
+  font-weight: 600;
+  border-width: 2px;
+}
+
+.btn-status.active:nth-child(1) {
+  background: var(--success-light);
+  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.btn-status.active:nth-child(2) {
+  background: var(--error-light);
+  color: var(--error-color);
+  border-color: var(--error-color);
+}
+
+.btn-status.active:nth-child(3) {
+  background: var(--warning-light);
+  color: var(--warning-color);
+  border-color: var(--warning-color);
+}
+
+.btn-status.active:nth-child(4) {
+  background: var(--info-light);
+  color: var(--info-color);
+  border-color: var(--info-color);
+}
+
+/* Student Self-Mark Section */
+.student-self-mark {
+  margin: 1.5rem 0;
+}
+
+.student-self-mark h4 {
+  margin: 1.5rem 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.active-sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.active-session-item {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.active-session-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.session-info {
+  flex: 1;
+}
+
+.session-info .session-topic {
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.session-info .session-date {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.btn-mark-present {
+  padding: 0.5rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-mark-present:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 144, 120, 0.3);
+}
+
+.btn-marked {
+  padding: 0.5rem 1.5rem;
+  background: var(--primary-light);
+  color: var(--success-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: not-allowed;
+  white-space: nowrap;
+}
+
+.self-mark-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.self-mark-message.success {
+  background: var(--primary-light);
+  color: var(--success-color);
+  border: 1px solid var(--primary-color);
+}
+
+.self-mark-message.error {
+  background: var(--error-light);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+/* Student View */
+.student-session-view {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.student-session-view h4 {
+  margin-top: 0;
+  color: var(--primary-color);
+}
+
+.student-active-session {
+  padding: 1rem;
+  background: var(--success-light);
+  border-radius: 6px;
+  border-left: 4px solid var(--success-color);
+}
+
+.student-active-session p {
+  margin: 0;
+  color: var(--success-color);
+}
+
+/* Empty State */
+.empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .course-attendance {
+    padding: 1rem;
+  }
+
+  .attendance-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .sessions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-status {
+    width: 100%;
+  }
+
+  .summary-table,
+  .attendance-table {
+    font-size: 0.875rem;
+  }
+
+  .summary-table th,
+  .summary-table td,
+  .attendance-table th,
+  .attendance-table td {
+    padding: 0.5rem;
+  }
+}

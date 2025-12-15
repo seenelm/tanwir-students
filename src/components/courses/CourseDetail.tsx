@@ -9,6 +9,7 @@ import { EmailService } from '../../services/email/emailService';
 import { CourseAttachments } from './CourseAttachments';
 import { DriveAttachmentForm } from './DriveAttachmentForm';
 import { Videos } from '../videos/Videos';
+import { CourseAttendance } from './CourseAttendance';
 
 // Syllabus data structure
 interface SyllabusSemester {
@@ -57,7 +58,7 @@ interface SyllabusData {
   semesters?: SyllabusSemester[];
 }
 
-type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments' | 'attachments' | 'videos';
+type TabType = 'overview' | 'syllabus' | 'grades' | 'assignments' | 'attachments' | 'videos' | 'attendance';
 
 interface StudentGrade {
   assignmentId: string;
@@ -800,6 +801,18 @@ export const CourseDetail: React.FC = () => {
       );
     }
     
+    if (activeTab === 'attendance') {
+      return (
+        <div className="course-attendance-container">
+          {courseId ? (
+            <CourseAttendance courseId={courseId} enrolledStudents={enrolledStudents} />
+          ) : (
+            <p className="empty">Course ID not found.</p>
+          )}
+        </div>
+      );
+    }
+    
     return null;
   };
   
@@ -822,7 +835,7 @@ export const CourseDetail: React.FC = () => {
       </div>
       
       <div className="tabs">
-          {['overview', 'syllabus', 'grades', 'assignments', 'attachments', 'videos'].map(tab => (
+          {['overview', 'syllabus', 'grades', 'assignments', 'attachments', 'videos', 'attendance'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as TabType)}
