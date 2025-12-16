@@ -3,6 +3,7 @@ import { usePage } from '../../context/PageContext';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { Course } from '../../services/courses/types/course';
 import { AuthService, UserRole } from '../../services/auth';
+import { CourseEnrollment } from '../../services/auth/types';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { CourseAssignments } from '../assignments/CourseAssignments';
 import { EmailService } from '../../services/email/emailService';
@@ -115,7 +116,7 @@ export const CourseDetail: React.FC = () => {
         // Get user's enrollment data to determine which semesters they're enrolled in
         const userData = await authService.getUserData(currentUser.uid);
         if (userData?.courses) {
-          const enrollment = userData.courses.find((c: any) => {
+          const enrollment: CourseEnrollment | undefined = userData.courses.find((c: any) => {
             const courseRef = c.courseRef || '';
             return courseRef.includes(courseId) || courseId.includes(courseRef.split('/')[1]);
           });
