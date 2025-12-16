@@ -87,6 +87,7 @@ export const CourseDetail: React.FC = () => {
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showAttachmentForm, setShowAttachmentForm] = useState(false);
+  const [enrolledSemesters, setEnrolledSemesters] = useState<string[]>([]);
   const { courseId } = usePage();
   
   useEffect(() => {
@@ -106,10 +107,31 @@ export const CourseDetail: React.FC = () => {
       const role = await authService.getUserRole();
       setUserRole(role);
 
-      // Check if current user is enrolled
+      // Check if current user is enrolled and get semester enrollment
       const currentUser = authService.getCurrentUser();
       if (currentUser && fetchedCourse) {
         courseService.isStudentEnrolled(courseId, currentUser.uid);
+        
+        // Get user's enrollment data to determine which semesters they're enrolled in
+        const userData = await authService.getUserData(currentUser.uid);
+        if (userData?.courses) {
+          const enrollment = userData.courses.find((c: any) => {
+            const courseRef = c.courseRef || '';
+            return courseRef.includes(courseId) || courseId.includes(courseRef.split('/')[1]);
+          });
+          
+          if (enrollment?.guidanceDetails?.plan) {
+            // Map plan values to semester tabs
+            const plan = enrollment.guidanceDetails.plan;
+            if (plan === 'Full Year') {
+              setEnrolledSemesters(['fall', 'spring']);
+            } else if (plan === 'Fall Semester') {
+              setEnrolledSemesters(['fall']);
+            } else if (plan === 'Spring Semester') {
+              setEnrolledSemesters(['spring']);
+            }
+          }
+        }
       }
       
       // Fetch enrolled students from users collection
@@ -787,7 +809,10 @@ export const CourseDetail: React.FC = () => {
             </div>
           )}
           
-          <CourseAttachments attachments={course?.Attachments || []} />
+          <CourseAttachments 
+            attachments={course?.Attachments || []} 
+            enrolledSemesters={userRole === 'admin' ? undefined : enrolledSemesters}
+          />
         </div>
       );
     }
@@ -796,7 +821,10 @@ export const CourseDetail: React.FC = () => {
       return (
         <div className="course-videos">
           <h3>Course Videos</h3>
-          <Videos playlistId={course?.playlist} />
+          <Videos 
+            playlistId={course?.playlist} 
+            enrolledSemesters={userRole === 'admin' ? undefined : enrolledSemesters}
+          />
         </div>
       );
     }

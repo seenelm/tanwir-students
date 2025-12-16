@@ -19,6 +19,28 @@ export interface CourseEnrollment {
     plan?: string;
     status?: string;
   };
+  guidanceDetails?: {
+    imageUrl?: string;
+    module?: string;
+    plan?: string;
+    section?: string;
+    status?: string;
+    [key: string]: any;
+  };
+  placementInfo?: {
+    arabicProficiency?: string;
+    interestReason?: string;
+    level?: string;
+    listeningAbility?: string;
+    plan?: string;
+    previousTopics?: string;
+    readingAbility?: string;
+    section?: string;
+    studiedIslamicSciences?: string;
+    writingAbility?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
 }
 
 export interface AuthorizedUser {

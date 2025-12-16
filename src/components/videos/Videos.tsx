@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { VideoCard, Video } from './VideoCard';
 import { VideoPlayer } from './VideoPlayer';
 import { YouTubeService } from '../../services/youtube/youtubeService';
 
 interface VideosProps {
   playlistId?: string;
+  enrolledSemesters?: string[]; // 'fall', 'spring', or both
 }
 
-export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
+type SemesterTab = 'fall' | 'spring' | 'all';
+
+export const Videos: React.FC<VideosProps> = ({ playlistId, enrolledSemesters }) => {
   const [videoList, setVideoList] = useState<Video[]>([]);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'list' | 'player'>('list');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<SemesterTab>('spring');
 
   useEffect(() => {
     const fetchPlaylistVideos = async () => {
@@ -41,6 +45,98 @@ export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
     fetchPlaylistVideos();
   }, [playlistId]);
 
+  // Helper function to determine semester based on month
+  const getSemester = (date: Date): 'fall' | 'spring' | 'other' => {
+    const month = date.getMonth(); // 0-11
+    
+    // Fall: September (8) - December (11)
+    if (month >= 8 && month <= 11) {
+      return 'fall';
+    }
+    // Spring: January (0) - May (4)
+    else if (month >= 0 && month <= 4) {
+      return 'spring';
+    }
+    // Other months (Summer)
+    else {
+      return 'other';
+    }
+  };
+
+  // Determine which tabs should be visible based on enrollment
+  const visibleTabs = useMemo(() => {
+    if (!enrolledSemesters || enrolledSemesters.length === 0) {
+      // If no enrollment data, show all tabs (admin or default behavior)
+      return ['fall', 'spring', 'all'] as SemesterTab[];
+    }
+    
+    const tabs = [...enrolledSemesters] as SemesterTab[];
+    if (!tabs.includes('all')) {
+      tabs.push('all'); // Always show 'all' tab
+    }
+    return tabs;
+  }, [enrolledSemesters]);
+
+  // Set default active tab to first visible tab
+  useEffect(() => {
+    if (!visibleTabs.includes(activeTab)) {
+      setActiveTab(visibleTabs[0]);
+    }
+  }, [visibleTabs, activeTab]);
+
+  // Organize videos by semester
+  const organizedVideos = useMemo(() => {
+    const fall: Video[] = [];
+    const spring: Video[] = [];
+
+    videoList.forEach(video => {
+      if (video.uploadDate) {
+        const uploadDate = new Date(video.uploadDate);
+
+        // Categorize by semester
+        const semester = getSemester(uploadDate);
+        if (semester === 'fall') {
+          fall.push(video);
+        } else if (semester === 'spring') {
+          spring.push(video);
+        }
+      }
+    });
+
+// Sort: class videos first (by class number descending), then non-class videos
+const sortVideos = (a: Video, b: Video) => {
+  const aIsClass = a.title.toLowerCase().includes('class');
+  const bIsClass = b.title.toLowerCase().includes('class');
+  
+  // If one is class and other isn't, class comes first
+  if (aIsClass && !bIsClass) return -1;
+  if (!aIsClass && bIsClass) return 1;
+  
+  // Both are class videos - sort by class number (descending)
+  if (aIsClass && bIsClass) {
+    const aMatch = a.title.match(/class\s+(\d+)/i);
+    const bMatch = b.title.match(/class\s+(\d+)/i);
+    const aNum = aMatch ? parseInt(aMatch[1]) : 0;
+    const bNum = bMatch ? parseInt(bMatch[1]) : 0;
+    return bNum - aNum; // Descending order
+  }
+  
+  // Both non-class videos - sort by date (newest first)
+  const dateA = new Date(a.uploadDate || 0);
+  const dateB = new Date(b.uploadDate || 0);
+  return dateB.getTime() - dateA.getTime();
+};
+
+return {
+  fall: fall.sort(sortVideos),
+  spring: spring.sort(sortVideos),
+  all: [...videoList].sort(sortVideos)
+};
+  }, [videoList]);
+
+  // Get current videos based on active tab
+  const currentVideos = organizedVideos[activeTab];
+
   // Show loading state
   if (loading) {
     return (
@@ -66,7 +162,7 @@ export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
     );
   }
 
-  const selectedVideo = videoList[selectedVideoIndex];
+  const selectedVideo = currentVideos[selectedVideoIndex];
 
   const handleVideoSelect = (index: number) => {
     setSelectedVideoIndex(index);
@@ -74,7 +170,7 @@ export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
   };
 
   const handleNext = () => {
-    if (selectedVideoIndex < videoList.length - 1) {
+    if (selectedVideoIndex < currentVideos.length - 1) {
       setSelectedVideoIndex(selectedVideoIndex + 1);
     }
   };
@@ -93,20 +189,58 @@ export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
     <div className="videos-container">
       {viewMode === 'list' ? (
         <div className="videos-list-view">
+          <div className="semester-tabs">
+            {visibleTabs.includes('fall') && (
+              <button
+                className={`semester-tab ${activeTab === 'fall' ? 'active' : ''}`}
+                onClick={() => setActiveTab('fall')}
+              >
+                Fall Semester
+                {organizedVideos.fall.length > 0 && (
+                  <span className="tab-count">{organizedVideos.fall.length}</span>
+                )}
+              </button>
+            )}
+            {visibleTabs.includes('spring') && (
+              <button
+                className={`semester-tab ${activeTab === 'spring' ? 'active' : ''}`}
+                onClick={() => setActiveTab('spring')}
+              >
+                Spring Semester
+                {organizedVideos.spring.length > 0 && (
+                  <span className="tab-count">{organizedVideos.spring.length}</span>
+                )}
+              </button>
+            )}
+            {visibleTabs.includes('all') && (
+              <button
+                className={`semester-tab ${activeTab === 'all' ? 'active' : ''}`}
+                onClick={() => setActiveTab('all')}
+              >
+                All
+                <span className="tab-count">{videoList.length}</span>
+              </button>
+            )}
+          </div>
+
           <div className="videos-header">
-            <span className="video-count">{videoList.length} videos</span>
+            <span className="video-count">{currentVideos.length} videos</span>
           </div>
           
-          <div className="videos-grid">
-            {videoList.map((video, index) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                onClick={() => handleVideoSelect(index)}
-                isActive={selectedVideoIndex === index}
-              />
-            ))}
-          </div>
+          {currentVideos.length > 0 ? (
+            <div className="videos-grid">
+              {currentVideos.map((video, index) => (
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  onClick={() => handleVideoSelect(index)}
+                  isActive={selectedVideoIndex === index}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="empty">No videos in this category.</p>
+          )}
         </div>
       ) : (
         <div className="videos-player-view">
@@ -123,7 +257,7 @@ export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
                 video={selectedVideo}
                 onNext={handleNext}
                 onPrevious={handlePrevious}
-                hasNext={selectedVideoIndex < videoList.length - 1}
+                hasNext={selectedVideoIndex < currentVideos.length - 1}
                 hasPrevious={selectedVideoIndex > 0}
               />
             </div>
@@ -131,7 +265,7 @@ export const Videos: React.FC<VideosProps> = ({ playlistId }) => {
             <div className="playlist-sidebar">
               <h4>Playlist</h4>
               <div className="playlist-items">
-                {videoList.map((video, index) => (
+                {currentVideos.map((video, index) => (
                   <div
                     key={video.id}
                     className={`playlist-item ${index === selectedVideoIndex ? 'active' : ''}`}

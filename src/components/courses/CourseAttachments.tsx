@@ -6,13 +6,35 @@ import './CourseAttachments.css';
 
 interface CourseAttachmentsProps {
   attachments: CourseAttachment[];
+  enrolledSemesters?: string[]; // 'fall', 'spring', or both
 }
 
 type SemesterTab = 'fall' | 'spring' | 'all';
 
-export const CourseAttachments: React.FC<CourseAttachmentsProps> = ({ attachments }) => {
+export const CourseAttachments: React.FC<CourseAttachmentsProps> = ({ attachments, enrolledSemesters }) => {
   const { courseId } = usePage();
   const [activeTab, setActiveTab] = useState<SemesterTab>('spring');
+
+  // Determine which tabs should be visible based on enrollment
+  const visibleTabs = useMemo(() => {
+    if (!enrolledSemesters || enrolledSemesters.length === 0) {
+      // If no enrollment data, show all tabs (admin or default behavior)
+      return ['fall', 'spring', 'all'] as SemesterTab[];
+    }
+    
+    const tabs = [...enrolledSemesters] as SemesterTab[];
+    if (!tabs.includes('all')) {
+      tabs.push('all'); // Always show 'all' tab
+    }
+    return tabs;
+  }, [enrolledSemesters]);
+
+  // Set default active tab to first visible tab
+  React.useEffect(() => {
+    if (!visibleTabs.includes(activeTab)) {
+      setActiveTab(visibleTabs[0]);
+    }
+  }, [visibleTabs, activeTab]);
 
   // Helper function to determine semester based on month
   const getSemester = (date: Date): 'fall' | 'spring' | 'other' => {
@@ -77,31 +99,37 @@ export const CourseAttachments: React.FC<CourseAttachmentsProps> = ({ attachment
   return (
     <div className="course-attachments">
       <div className="semester-tabs">
-        <button
-          className={`semester-tab ${activeTab === 'fall' ? 'active' : ''}`}
-          onClick={() => setActiveTab('fall')}
-        >
-          Fall Semester
-          {organizedAttachments.fall.length > 0 && (
-            <span className="tab-count">{organizedAttachments.fall.length}</span>
-          )}
-        </button>
-        <button
-          className={`semester-tab ${activeTab === 'spring' ? 'active' : ''}`}
-          onClick={() => setActiveTab('spring')}
-        >
-          Spring Semester
-          {organizedAttachments.spring.length > 0 && (
-            <span className="tab-count">{organizedAttachments.spring.length}</span>
-          )}
-        </button>
-        <button
-          className={`semester-tab ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All
-          <span className="tab-count">{attachments.length}</span>
-        </button>
+        {visibleTabs.includes('fall') && (
+          <button
+            className={`semester-tab ${activeTab === 'fall' ? 'active' : ''}`}
+            onClick={() => setActiveTab('fall')}
+          >
+            Fall Semester
+            {organizedAttachments.fall.length > 0 && (
+              <span className="tab-count">{organizedAttachments.fall.length}</span>
+            )}
+          </button>
+        )}
+        {visibleTabs.includes('spring') && (
+          <button
+            className={`semester-tab ${activeTab === 'spring' ? 'active' : ''}`}
+            onClick={() => setActiveTab('spring')}
+          >
+            Spring Semester
+            {organizedAttachments.spring.length > 0 && (
+              <span className="tab-count">{organizedAttachments.spring.length}</span>
+            )}
+          </button>
+        )}
+        {visibleTabs.includes('all') && (
+          <button
+            className={`semester-tab ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
+          >
+            All
+            <span className="tab-count">{attachments.length}</span>
+          </button>
+        )}
       </div>
 
       {currentAttachments.length > 0 ? (
