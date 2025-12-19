@@ -52,3 +52,9 @@ export interface QuizAssignment extends Assignment {
   passingScore?: number | null;
   questions?: QuizQuestion[];
 }
+
+export interface GoogleFormAssignment extends Assignment {
+  type: 'google-form';
+  formUrl: string;
+  embedUrl?: string;
+}

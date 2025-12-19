@@ -4,7 +4,7 @@ import { Assignment } from '../types/assignment';
 
 export const assignmentConverter: FirestoreDataConverter<Assignment> = {
   toFirestore: (assignment: Assignment): DocumentData => {
-    return {
+    const data: DocumentData = {
       CourseId: assignment.CourseId,
       CourseName: assignment.CourseName,
       CreatedAt: assignment.CreatedAt instanceof Date ? Timestamp.fromDate(assignment.CreatedAt) : Timestamp.now(),
@@ -15,10 +15,19 @@ export const assignmentConverter: FirestoreDataConverter<Assignment> = {
       Title: assignment.Title,
       Subject: assignment.Subject || null,
     };
+    
+    // Add optional fields if they exist
+    if (assignment.type) data.type = assignment.type;
+    if (assignment.timeLimit) data.timeLimit = assignment.timeLimit;
+    if (assignment.passingScore) data.passingScore = assignment.passingScore;
+    if ('formUrl' in assignment) data.formUrl = (assignment as any).formUrl;
+    if ('embedUrl' in assignment) data.embedUrl = (assignment as any).embedUrl;
+    
+    return data;
   },
   fromFirestore: (snapshot: QueryDocumentSnapshot): Assignment => {
     const data = snapshot.data();
-    return {
+    const assignment: Assignment = {
       AssignmentId: snapshot.id,
       CourseId: data.CourseId,
       CourseName: data.CourseName,
@@ -30,5 +39,14 @@ export const assignmentConverter: FirestoreDataConverter<Assignment> = {
       Title: data.Title,
       Subject: data.Subject || null,
     };
+    
+    // Add optional fields if they exist
+    if (data.type) assignment.type = data.type;
+    if (data.timeLimit) assignment.timeLimit = data.timeLimit;
+    if (data.passingScore) assignment.passingScore = data.passingScore;
+    if (data.formUrl) (assignment as any).formUrl = data.formUrl;
+    if (data.embedUrl) (assignment as any).embedUrl = data.embedUrl;
+    
+    return assignment;
   }
 };

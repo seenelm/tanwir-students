@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Assignment, QuizAssignment } from '../../services/assignments/types/assignment';
+import { Assignment, QuizAssignment, GoogleFormAssignment } from '../../services/assignments/types/assignment';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { usePage } from '../../context/PageContext';
 import { auth } from '../../config/firebase';
 
-type TabType = 'details' | 'attachments' | 'discussions' | 'questions';
+type TabType = 'details' | 'attachments' | 'discussions' | 'questions' | 'form';
 
 export const AssignmentDetail: React.FC = () => {
   const { assignmentId, setBreadcrumbs } = usePage();
@@ -33,68 +33,66 @@ export const AssignmentDetail: React.FC = () => {
     submittedAt?: any; // Firestore Timestamp
   };
 
+  useEffect(() => {
+    if (!assignmentId) return;
 
-useEffect(() => {
-  if (!assignmentId) return;
+    let cancelled = false;
 
-  let cancelled = false;
+    const fetchAssignmentAndResult = async () => {
+      try {
+        const result = await service.getAssignmentById(assignmentId);
+        if (cancelled) return;
 
-  const fetchAssignmentAndResult = async () => {
-    try {
-      const result = await service.getAssignmentById(assignmentId);
-      if (cancelled) return;
+        if (result) {
+          setBreadcrumbs(['Courses', result.CourseName, result.Title]);
+        }
+        setAssignment(result);
+        setLoading(false);
 
-      if (result) {
-        setBreadcrumbs(['Courses', result.CourseName, result.Title]);
-      }
-      setAssignment(result);
-      setLoading(false);
-
-      // If user is signed in and this is a quiz, load any existing submission
-      const currentUser = auth.currentUser;
-      
-      // Check if this is a quiz assignment by looking for quiz-specific properties or questions
-      let isQuizAssignmentCheck = result && ('passingScore' in result || 'timeLimit' in result);
-      
-      // If not identified as a quiz by properties, check if it has questions or if title contains "Quiz"
-      if (!isQuizAssignmentCheck && result) {
-        // Check if title contains "Quiz"
-        if (result.Title && result.Title.toLowerCase().includes('quiz')) {
-          isQuizAssignmentCheck = true;
+        // If user is signed in and this is a quiz, load any existing submission
+        const currentUser = auth.currentUser;
+        
+        // Check if this is a quiz assignment by looking for quiz-specific properties or questions
+        let isQuizAssignmentCheck = result && ('passingScore' in result || 'timeLimit' in result);
+        
+        // If not identified as a quiz by properties, check if it has questions or if title contains "Quiz"
+        if (!isQuizAssignmentCheck && result) {
+          // Check if title contains "Quiz"
+          if (result.Title && result.Title.toLowerCase().includes('quiz')) {
+            isQuizAssignmentCheck = true;
+          }
+          
+          // Also check if we have questions loaded for this assignment
+          if (!isQuizAssignmentCheck) {
+            const questions = await service.getQuestions(assignmentId);
+            isQuizAssignmentCheck = questions && questions.length > 0;
+          }
         }
         
-        // Also check if we have questions loaded for this assignment
-        if (!isQuizAssignmentCheck) {
-          const questions = await service.getQuestions(assignmentId);
-          isQuizAssignmentCheck = questions && questions.length > 0;
+        if (currentUser && isQuizAssignmentCheck) {
+          const userRes = await service.getUserQuizResult(assignmentId, currentUser.uid);
+          
+          if (!cancelled && userRes) {
+            setExistingResult(userRes as QuizResult);
+            setSelectedAnswers(userRes.answers || {});
+            setQuizSubmitted(!!userRes.completed);      // disables inputs & hides submit
+            setQuizScore(
+              typeof userRes.score === 'number' ? userRes.score : null
+            );
+            setSaveStatus('success');
+          } else {
+            console.log('No existing quiz result found. You can add a button to create a test result.');
+          }
         }
+      } catch (e) {
+        console.error('Error loading assignment/result', e);
+        setLoading(false);
       }
-      
-      if (currentUser && isQuizAssignmentCheck) {
-        const userRes = await service.getUserQuizResult(assignmentId, currentUser.uid);
-        
-        if (!cancelled && userRes) {
-          setExistingResult(userRes as QuizResult);
-          setSelectedAnswers(userRes.answers || {});
-          setQuizSubmitted(!!userRes.completed);      // disables inputs & hides submit
-          setQuizScore(
-            typeof userRes.score === 'number' ? userRes.score : null
-          );
-          setSaveStatus('success');
-        } else {
-          console.log('No existing quiz result found. You can add a button to create a test result.');
-        }
-      }
-    } catch (e) {
-      console.error('Error loading assignment/result', e);
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchAssignmentAndResult();
-  return () => { cancelled = true; };
-}, [assignmentId, setBreadcrumbs]);
-
+    fetchAssignmentAndResult();
+    return () => { cancelled = true; };
+  }, [assignmentId, setBreadcrumbs]);
 
   useEffect(() => {
     if (!assignmentId || activeTab === 'details') return;
@@ -233,6 +231,28 @@ useEffect(() => {
       );
     }
 
+    if (activeTab === 'form' && assignment?.type === 'google-form') {
+      const googleFormAssignment = assignment as GoogleFormAssignment;
+      const embedUrl = googleFormAssignment.embedUrl || googleFormAssignment.formUrl;
+      
+      return (
+        <div className="google-form-container">
+          <iframe 
+            src={embedUrl}
+            width="100%" 
+            height="800" 
+            frameBorder="0" 
+            marginHeight={0} 
+            marginWidth={0}
+            title="Google Form"
+            style={{ border: 'none', minHeight: '800px' }}
+          >
+            Loading…
+          </iframe>
+        </div>
+      );
+    }
+
     if (tabData.length === 0) {
       return <p className="empty">No {activeTab} available.</p>;
     }
@@ -348,6 +368,20 @@ useEffect(() => {
   if (loading) return <div>Loading assignment...</div>;
   if (!assignment) return <div>Assignment not found</div>;
 
+  // Determine which tabs to show based on assignment type
+  const availableTabs: TabType[] = ['details'];
+  
+  console.log('Assignment type:', assignment.type);
+  console.log('Full assignment object:', assignment);
+  
+  if (assignment.type === 'google-form') {
+    availableTabs.push('form');
+  } else if (assignment.type === 'quiz' || activeTab === 'questions') {
+    availableTabs.push('questions');
+  }
+
+  console.log('Available tabs:', availableTabs);
+
   return (
     <div className="assignment-container">
       <h2>{assignment.Title}</h2>
@@ -358,7 +392,7 @@ useEffect(() => {
         </div>
       )}
       <div className="tabs">
-        {['details', 'attachments', 'discussions', 'questions'].map(tab => (
+        {availableTabs.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as TabType)}

@@ -347,6 +347,55 @@ export class AssignmentService {
     return assignmentId;
   }
 
+  // Create a new Google Form assignment
+  async createGoogleFormAssignment(formData: {
+    title: string;
+    description: string;
+    formUrl: string;
+    embedUrl: string;
+    courseId: string;
+    courseName: string;
+    dueDate: Date;
+    points: number;
+    createdBy?: string;
+  }): Promise<string> {
+    console.log('Creating new Google Form assignment');
+    
+    const currentUser = auth.currentUser;
+    const createdBy = formData.createdBy || currentUser?.email || 'Admin';
+    
+    const newAssignment = {
+      Title: formData.title,
+      Description: formData.description,
+      CourseId: formData.courseId,
+      CourseName: formData.courseName,
+      DueDate: formData.dueDate instanceof Date ? Timestamp.fromDate(formData.dueDate) : Timestamp.now(),
+      Points: formData.points,
+      CreatedBy: createdBy,
+      CreatedAt: serverTimestamp(),
+      AssignmentId: '', // This will be updated after document creation
+      type: 'google-form',
+      formUrl: formData.formUrl,
+      embedUrl: formData.embedUrl,
+      Subject: null
+    };
+    
+    // Add the assignment document directly without converter to preserve all fields
+    const assignmentsCollectionRef = collection(this.db, 'assignments');
+    const docRef = await addDoc(assignmentsCollectionRef, newAssignment);
+    const assignmentId = docRef.id;
+    
+    // Update the document with its own ID
+    await updateDoc(docRef, {
+      AssignmentId: assignmentId
+    });
+    
+    // Clear cache to ensure fresh data on next fetch
+    this.clearCache();
+    
+    return assignmentId;
+  }
+
   // Get all quiz results for a specific student across all assignments in a course
   async getStudentGradesForCourse(courseId: string, studentId: string): Promise<StudentGrade[]> {
     try {
