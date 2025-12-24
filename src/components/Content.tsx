@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Home } from './home/Home';
 import { Courses } from './courses/Courses';
 import { Assignments } from './assignments/Assignments';
@@ -9,7 +9,7 @@ import { AttachmentViewer } from './courses/AttachmentViewer';
 import { Scholarships } from './scholarships/Scholarships';
 import { Students } from './admin/Students';
 import QuizCreation from './admin/QuizCreation';
-import { AuthService, UserRole } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 import { usePage } from '../context/PageContext';
 
 interface ContentProps {
@@ -17,36 +17,10 @@ interface ContentProps {
 }
 
 export const Content: React.FC<ContentProps> = ({ currentPage }) => {
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
   const { quizCourseId } = usePage();
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const authService = AuthService.getInstance();
-        const role = await authService.getUserRole();
-        setUserRole(role);
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserRole();
-  }, []);
+  const { user } = useAuth();
 
   const renderContent = () => {
-    // Show loading state while fetching user role
-    if (loading) {
-      return (
-        <div className="loading-container">
-          <p>Loading...</p>
-        </div>
-      );
-    }
-
     switch (currentPage.toLowerCase()) {
       case 'courses':
         return <Courses />;
@@ -64,7 +38,7 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         return <AttachmentViewer />;
       case 'createquiz':
         // Only allow admin users to access the quiz creation page
-        if (userRole === 'admin') {
+        if (user?.Role === 'admin') {
           return <QuizCreation courseId={quizCourseId || undefined} />;
         } else {
           return (
@@ -76,7 +50,7 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         }
       case 'financial aid':
         // Only allow admin users to access the scholarships page
-        if (userRole === 'admin') {
+        if (user?.Role === 'admin') {
           return <Scholarships />;
         } else {
           return (
@@ -88,7 +62,7 @@ export const Content: React.FC<ContentProps> = ({ currentPage }) => {
         }
       case 'students':
         // Only allow admin users to access the students page
-        if (userRole === 'admin') {
+        if (user?.Role === 'admin') {
           return <Students />;
         } else {
           return (

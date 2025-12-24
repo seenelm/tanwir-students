@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { AuthService, UserRole } from '../services/auth';
+import React from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useSignOut } from '../queries/authQueries';
 import '../styles/main.css';
 
 type Route = {
@@ -42,24 +43,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   isActive = false,
 }) => {
-  const authService = AuthService.getInstance();
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      const role = await authService.getUserRole();
-      setUserRole(role);
-    };
-
-    fetchUserRole();
-  }, []);
-
+  const { user } = useAuth();
+  const { mutate: signOut } = useSignOut();
   const handleSignOut = async () => {
-    try {
-      await authService.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    signOut();
   };
 
   const navigateTo = (path: string, title: string) => {
@@ -104,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Filter routes based on user role
   const filteredRoutes = routes.filter(route => {
     if (route.adminOnly) {
-      return userRole === 'admin';
+      return user?.Role === 'admin';
     }
     return true;
   });

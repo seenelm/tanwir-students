@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePage } from '../context/PageContext';
-import { AuthService } from '../services/auth';
 import { CourseService } from '../services/courses/service/CourseService';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   currentPage: string;
@@ -18,13 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
     courseId,
     assignmentCourseId
   } = usePage();
-  const [user, setUser] = useState<any>(null);
-  
-  useEffect(() => {
-    const authService = AuthService.getInstance();
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-  }, []);
+  const { user } = useAuth();
   
   useEffect(() => {
     // If we're on the CreateQuiz page, fetch the course name for breadcrumbs
@@ -159,9 +153,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
         {user && (
           <div className="user-profile">
             <div className="user-initials">
-              {user.displayName ? getInitials(user.displayName) : '?'}
+              {user.FirstName ? getInitials(user.FirstName) : '?'}
             </div>
-            <span className="user-name">{user.displayName || 'User'}</span>
+            <span className="user-name">{user.FirstName || 'User'}</span>
           </div>
         )}
       </div>
