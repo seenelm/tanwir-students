@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { usePage } from '../../context/PageContext';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { Course } from '../../services/courses/types/course';
-import { AuthService, UserRole } from '../../services/auth';
+import { AuthService } from '../../services/auth';
 import { CourseEnrollment } from '../../services/auth/types';
+import { useUserRole } from '../../context/UserRoleContext';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { CourseAssignments } from '../assignments/CourseAssignments';
 import { EmailService } from '../../services/email/emailService';
@@ -11,6 +12,7 @@ import { CourseAttachments } from './CourseAttachments';
 import { DriveAttachmentForm } from './DriveAttachmentForm';
 import { Videos } from '../videos/Videos';
 import { CourseAttendance } from './CourseAttendance';
+import { useAuth } from '../../context/AuthContext';
 
 // Syllabus data structure
 interface SyllabusSemester {
@@ -79,7 +81,6 @@ export const CourseDetail: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [allStudentGrades, setAllStudentGrades] = useState<StudentGrades[]>([]);
   const [gradesLoading, setGradesLoading] = useState(false);
@@ -90,6 +91,8 @@ export const CourseDetail: React.FC = () => {
   const [showAttachmentForm, setShowAttachmentForm] = useState(false);
   const [enrolledSemesters, setEnrolledSemesters] = useState<string[]>([]);
   const { courseId } = usePage();
+  const { user } = useAuth();
+  const { role: userRole } = useUserRole();
   
   useEffect(() => {
     const courseService = CourseService.getInstance();
@@ -103,18 +106,13 @@ export const CourseDetail: React.FC = () => {
       // Get course from cache (which is now maintained by real-time listener)
       const fetchedCourse = await courseService.getCourseById(courseId);
       setCourse(fetchedCourse ?? null);
-      
-      // Get user role
-      const role = await authService.getUserRole();
-      setUserRole(role);
 
       // Check if current user is enrolled and get semester enrollment
-      const currentUser = authService.getCurrentUser();
-      if (currentUser && fetchedCourse) {
-        courseService.isStudentEnrolled(courseId, currentUser.uid);
+      if (user && fetchedCourse) {
+        courseService.isStudentEnrolled(courseId, user.uid);
         
         // Get user's enrollment data to determine which semesters they're enrolled in
-        const userData = await authService.getUserData(currentUser.uid);
+        const userData = await authService.getUserData(user.uid);
         if (userData?.courses) {
           const enrollment: CourseEnrollment | undefined = userData.courses.find((c: any) => {
             const courseRef = c.courseRef || '';
@@ -173,7 +171,7 @@ export const CourseDetail: React.FC = () => {
     };
   
     fetchCourseDetail();
-  }, [courseId]);
+  }, [courseId, user]);
   
   useEffect(() => {
     // Fetch grades data when the grades tab is active and we have course data
@@ -188,7 +186,6 @@ export const CourseDetail: React.FC = () => {
     setGradesLoading(true);
     
     try {
-      const authService = AuthService.getInstance();
       const assignmentService = AssignmentService.getInstance();
       
       // Get all assignments for this course
@@ -200,8 +197,7 @@ export const CourseDetail: React.FC = () => {
       
       if (userRole === 'student') {
         // For students, filter only their own grades
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
+        if (user) {
           const studentGrades: StudentGrade[] = [];
           
           // Process each assignment
@@ -209,7 +205,7 @@ export const CourseDetail: React.FC = () => {
             const assignmentResults = allResults[assignment.AssignmentId] || [];
             
             // Find this student's result for this assignment
-            const studentResult = assignmentResults.find(r => r.StudentId === currentUser.uid);
+            const studentResult = assignmentResults.find(r => r.StudentId === user.uid);
             
             if (studentResult) {
               studentGrades.push({

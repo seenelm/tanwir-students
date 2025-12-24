@@ -1,19 +1,20 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useAuthUser } from '../queries/authQueries';
 import { AuthorizedUser } from '../types/auth';
 
 interface AuthContextValue {
   user: AuthorizedUser | null;
-  setUser: (user: AuthorizedUser | null) => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthorizedUser | null>(null);
+  const { data: user = null, isLoading } = useAuthUser();
 
   const value = {
     user,
-    setUser,
+    isLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

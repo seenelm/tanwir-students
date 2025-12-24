@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { AttendanceService } from '../../services/attendance/service/AttendanceService';
 import { ClassSession, StudentAttendanceSummary, AttendanceRecord } from '../../services/attendance/types/attendance';
-import { AuthService, UserRole } from '../../services/auth';
 import './CourseAttendance.css';
+import { useAuth } from '../../context/AuthContext';
+import { useUserRole } from '../../context/UserRoleContext';
 
 interface CourseAttendanceProps {
   courseId: string;
@@ -15,8 +16,6 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
   const [sessionAttendance, setSessionAttendance] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showAddSession, setShowAddSession] = useState(false);
   const [newSessionDate, setNewSessionDate] = useState('');
   const [newSessionTopic, setNewSessionTopic] = useState('');
@@ -24,28 +23,14 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
   const [view, setView] = useState<'summary' | 'sessions'>('summary');
   const [activeSessions, setActiveSessions] = useState<ClassSession[]>([]);
   const [markedSessionIds, setMarkedSessionIds] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
+  const { role: userRole } = useUserRole();
+  const currentUserId = user?.uid || null;
 
   useEffect(() => {
-    const authService = AuthService.getInstance();
-    const user = authService.getCurrentUser();
-    
-    if (user) {
-      setCurrentUserId(user.uid);
-      authService.getUserRole().then(role => {
-        setUserRole(role);
-      });
-    }
-
     loadData();
-  }, [courseId, enrolledStudents]);
+  }, [courseId, enrolledStudents, currentUserId]);
 
-  // Reload data when currentUserId changes to check marked sessions
-  useEffect(() => {
-    if (currentUserId) {
-      console.log('Current user ID set, reloading data to check marked sessions');
-      loadData();
-    }
-  }, [currentUserId]);
 
   const loadData = async () => {
     setLoading(true);

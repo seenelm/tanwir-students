@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { AuthService, AuthorizedUser } from '../../services/auth';
+import React, { useState, useMemo } from 'react';
+import { AuthorizedUser } from '../../services/auth';
 import '../../styles/students.css';
+import { useStudents } from '../../queries/userQueries';
 
 // Define Firestore timestamp interface
 interface FirestoreTimestamp {
@@ -64,45 +65,50 @@ interface StudentWithDetails extends Omit<AuthorizedUser, "CreatedAt"> {
 }
 
 export const Students: React.FC = () => {
-  const [students, setStudents] = useState<StudentWithDetails[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<StudentWithDetails[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithDetails | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      setLoading(true);
-      try {
-        const authService = AuthService.getInstance();
-        const allUsers = await authService.getAllUsers();
-        console.log('Raw users data:', allUsers);
-        // Filter out admin users, only keep students
-        const onlyStudents = allUsers.filter(user => user.Role !== 'admin');
-        setStudents(onlyStudents as StudentWithDetails[]);
-        setFilteredStudents(onlyStudents as StudentWithDetails[]);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching students:', err);
-        setError('Failed to load students. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: students = [], isLoading: loading, error: queryError } = useStudents();
+  
+  const error = queryError ? 'Failed to load students. Please try again later.' : null;
 
-    fetchStudents();
-  }, []);
+  // Helper functions
+  const getDisplayName = (student: StudentWithDetails) => {
+    if (student.studentInfo) {
+      const info = student.studentInfo;
+      if (info.firstName || info.lastName) {
+        return `${info.firstName || ''} ${info.lastName || ''}`.trim();
+      }
+    }
+    return `${student.FirstName || ''} ${student.LastName || ''}`.trim() || 'Unknown';
+  };
+
+  const getEmail = (student: StudentWithDetails) => {
+    if (student.studentInfo && student.studentInfo.email) {
+      return student.studentInfo.email;
+    }
+    return student.email || 'N/A';
+  };
+
+  const getCoursesString = (student: StudentWithDetails) => {
+    if (!student.courses || student.courses.length === 0) {
+      return 'Not enrolled';
+    }
+    return student.courses
+      .map(course => course.courseName || 'Unnamed Course')
+      .join(', ');
+  };
 
   // Filter students when search term changes
-  useEffect(() => {
+  const filteredStudents = useMemo(() => {
+    const studentList = students as StudentWithDetails[];
+    
     if (searchTerm.trim() === '') {
-      setFilteredStudents(students);
-      return;
+      return studentList;
     }
 
     const searchTermLower = searchTerm.toLowerCase();
-    const filtered = students.filter(student => {
+    return studentList.filter(student => {
       const name = getDisplayName(student).toLowerCase();
       const email = getEmail(student).toLowerCase();
       const courses = getCoursesString(student).toLowerCase();
@@ -111,8 +117,6 @@ export const Students: React.FC = () => {
              email.includes(searchTermLower) || 
              courses.includes(searchTermLower);
     });
-    
-    setFilteredStudents(filtered);
   }, [searchTerm, students]);
 
   const handleViewDetails = (student: StudentWithDetails) => {
@@ -122,38 +126,6 @@ export const Students: React.FC = () => {
 
   const handleCloseDetails = () => {
     setSelectedStudent(null);
-  };
-
-  // Helper function to get display name
-  const getDisplayName = (student: StudentWithDetails) => {
-    // Try to get name from studentInfo first
-    if (student.studentInfo) {
-      const info = student.studentInfo;
-      if (info.firstName || info.lastName) {
-        return `${info.firstName || ''} ${info.lastName || ''}`.trim();
-      }
-    }
-    // Fall back to FirstName/LastName
-    return `${student.FirstName || ''} ${student.LastName || ''}`.trim() || 'Unknown';
-  };
-
-  // Helper function to get email
-  const getEmail = (student: StudentWithDetails) => {
-    if (student.studentInfo && student.studentInfo.email) {
-      return student.studentInfo.email;
-    }
-    return student.email || 'N/A';
-  };
-
-  // Helper function to get course names as a comma-separated string
-  const getCoursesString = (student: StudentWithDetails) => {
-    if (!student.courses || student.courses.length === 0) {
-      return 'Not enrolled';
-    }
-    
-    return student.courses
-      .map(course => course.courseName || 'Unnamed Course')
-      .join(', ');
   };
 
   // Helper function to get course section

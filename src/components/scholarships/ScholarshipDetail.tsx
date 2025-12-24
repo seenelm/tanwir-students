@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScholarshipApplication, ScholarshipService } from '../../services/scholarships/scholarshipService';
-import { AuthService } from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 
 interface ScholarshipDetailProps {
   application: ScholarshipApplication;
@@ -14,6 +14,7 @@ export const ScholarshipDetail: React.FC<ScholarshipDetailProps> = ({ applicatio
   const [success, setSuccess] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [selectedNeed, setSelectedNeed] = useState<string>(application.need || '25%');
+  const { user } = useAuth();
 
   const handleApprove = async () => {
     await handleStatusUpdate('approved');
@@ -29,10 +30,7 @@ export const ScholarshipDetail: React.FC<ScholarshipDetailProps> = ({ applicatio
       setError(null);
       setEmailStatus(null);
       
-      const authService = AuthService.getInstance();
-      const currentUser = authService.getCurrentUser();
-      
-      if (!currentUser) {
+      if (!user) {
         setError('You must be logged in to perform this action.');
         return;
       }
@@ -48,7 +46,7 @@ export const ScholarshipDetail: React.FC<ScholarshipDetailProps> = ({ applicatio
       await scholarshipService.updateApplicationStatus(
         application.id,
         status,
-        currentUser.uid,
+        user.uid,
         comments,
         selectedNeed // Pass the selected need percentage
       );

@@ -153,9 +153,23 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onToggleSidebar }) 
         {user && (
           <div className="user-profile">
             <div className="user-initials">
-              {user.FirstName ? getInitials(user.FirstName) : '?'}
+              {user.displayName 
+                ? getInitials(user.displayName)
+                : user.FirstName && user.LastName 
+                  ? getInitials(`${user.FirstName} ${user.LastName}`)
+                  : user.FirstName 
+                    ? getInitials(user.FirstName)
+                    : user.email
+                      ? getInitials(user.email)
+                      : '?'}
             </div>
-            <span className="user-name">{user.FirstName || 'User'}</span>
+            <span className="user-name">
+              {user.displayName || 
+               (user.FirstName && user.LastName ? `${user.FirstName} ${user.LastName}` : null) ||
+               user.FirstName || 
+               user.email || 
+               'User'}
+            </span>
           </div>
         )}
       </div>

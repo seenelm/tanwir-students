@@ -1,6 +1,8 @@
 import React from 'react';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { UserRole, AuthService } from '../services/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 interface UserRoleContextType {
   role: UserRole | null;
@@ -18,7 +20,7 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const authService = AuthService.getInstance();
-    const unsubscribe = authService.onAuthStateChanged(async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const role = await authService.getUserRole();
         setRole(role);

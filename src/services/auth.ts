@@ -2,7 +2,6 @@ import {
   GoogleAuthProvider, 
   signInWithPopup,
   signOut,
-  onAuthStateChanged,
   User,
   signInWithEmailAndPassword,
   fetchSignInMethodsForEmail,
@@ -26,14 +25,10 @@ export interface AuthorizedUser {
 
 export class AuthService {
   private static instance: AuthService;
-  private authStateListeners: ((user: User | null) => void)[] = [];
   private db: Firestore;
 
   private constructor() {
     this.db = getFirestore();
-    onAuthStateChanged(auth, (user) => {
-      this.authStateListeners.forEach(listener => listener(user));
-    });
   }
 
   static getInstance(): AuthService {
@@ -185,12 +180,6 @@ export class AuthService {
     }
   }
 
-  onAuthStateChanged(callback: (user: User | null) => void): () => void {
-    this.authStateListeners.push(callback);
-    return () => {
-      this.authStateListeners = this.authStateListeners.filter(listener => listener !== callback);
-    };
-  }
 
   getCurrentUser(): User | null {
     return auth.currentUser;

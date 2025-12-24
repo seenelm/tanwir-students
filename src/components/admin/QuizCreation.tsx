@@ -4,7 +4,7 @@ import { AssignmentService } from '../../services/assignments/service/Assignment
 import { CourseService } from '../../services/courses/service/CourseService';
 import { QuizQuestion, QuizOption } from '../../services/assignments/types/assignment';
 import { useUserRole } from '../../context/UserRoleContext';
-import { AuthService } from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 
 interface QuizCreationProps {
   courseId?: string;
@@ -12,6 +12,7 @@ interface QuizCreationProps {
 
 const QuizCreation: React.FC<QuizCreationProps> = ({ courseId }) => {
   const { role } = useUserRole();
+  const { user } = useAuth();
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -155,8 +156,6 @@ const QuizCreation: React.FC<QuizCreationProps> = ({ courseId }) => {
       }
       
       const assignmentService = AssignmentService.getInstance();
-      const authService = AuthService.getInstance();
-      const user = authService.getCurrentUser();
       
       if (!user) {
         setError('User not authenticated.');

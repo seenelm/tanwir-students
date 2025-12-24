@@ -1,5 +1,5 @@
 import React from 'react';
-import { useUser } from '../../context/UserContext';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/home.css';
 
 const CLASS_NAMES = {
@@ -12,11 +12,14 @@ const CLASS_NAMES = {
 };
 
 export const Home: React.FC = () => {
-  const { userData } = useUser();
+  const { user } = useAuth();
 
   const getFirstName = () => {
-    if (userData && userData.FirstName) {
-      return userData.FirstName;
+    if (user?.displayName) {
+      return user.displayName.split(' ')[0];
+    }
+    if (user?.FirstName) {
+      return user.FirstName;
     }
     return '';
   };

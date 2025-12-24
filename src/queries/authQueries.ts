@@ -1,22 +1,42 @@
 // authQueries.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthRepository } from '../repos/authRepo';
-import { useAuth } from '../context/AuthContext';
+import { AuthService } from '../services/auth';
+import { auth } from '../config/firebase';
 
 const repo = new AuthRepository();
 const AUTH_KEY = ['auth'];
 
-export const useAuthUser = () =>
-  useQuery({
+// Query to get the current authenticated user with full data
+export const useAuthUser = () => {
+  const authService = AuthService.getInstance();
+  
+  return useQuery({
     queryKey: AUTH_KEY,
-    queryFn: () => repo.getCurrentUser(),
+    queryFn: async () => {
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) return null;
+      
+      const userData = await authService.getUserData(firebaseUser.uid);
+      
+      // Merge Firebase user data with Firestore data
+      return userData ? {
+        ...userData,
+        uid: firebaseUser.uid,
+        email: userData.email || firebaseUser.email || undefined,
+        displayName: firebaseUser.displayName || undefined,
+        FirstName: userData.FirstName || firebaseUser.displayName?.split(' ')[0] || undefined,
+        LastName: userData.LastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || undefined
+      } : null;
+    },
     staleTime: Infinity,
+    // This will be updated when auth state changes via the mutation below
   });
+};
 
 export const useSignInWithGoogle = () => {
   const qc = useQueryClient();
   const authRepo = new AuthRepository();
-  const { setUser } = useAuth(); // 👈 context write
 
   return useMutation({
     mutationFn: async () => {
@@ -24,9 +44,9 @@ export const useSignInWithGoogle = () => {
       const authorizedUser = await authRepo.ensureAuthorizedUser(firebaseUser);
       return authorizedUser;
     },
-    onSuccess: (authorizedUser) => {
-      setUser(authorizedUser);        // 🔥 hydrate once
-      qc.setQueryData(['auth'], true); // optional auth flag
+    onSuccess: () => {
+      // Auth state listener will update the cache automatically
+      qc.invalidateQueries({ queryKey: ['auth'] });
     },
   });
 };
@@ -34,7 +54,6 @@ export const useSignInWithGoogle = () => {
 export const useSignInWithEmailPassword = () => {
   const qc = useQueryClient();
   const authRepo = new AuthRepository();
-  const { setUser } = useAuth();
 
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
@@ -42,20 +61,20 @@ export const useSignInWithEmailPassword = () => {
       const authorizedUser = await authRepo.ensureAuthorizedUser(firebaseUser);
       return authorizedUser;
     },
-    onSuccess: (authorizedUser) => {
-      setUser(authorizedUser);
-      qc.setQueryData(['auth'], true);
+    onSuccess: () => {
+      // Auth state listener will update the cache automatically
+      qc.invalidateQueries({ queryKey: ['auth'] });
     },
   });
 };
+
 export const useSignOut = () => {
   const qc = useQueryClient();
-  const { setUser } = useAuth();
 
   return useMutation({
     mutationFn: () => repo.signOut(),
     onSuccess: () => {
-      setUser(null);
+      // Auth state listener will update the cache automatically
       qc.setQueryData(AUTH_KEY, null);
     },
   });

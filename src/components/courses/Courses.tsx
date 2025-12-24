@@ -1,93 +1,32 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Course } from '../../services/courses/types/course';
-import { CourseService } from '../../services/courses/service/CourseService';
+import React from 'react';
 import { CourseCard } from './CourseCard';
-import { AuthService, UserRole } from '../../services/auth';
 import confusedImage from '../../assets/confused1.webp';
+import { useAuth } from '../../context/AuthContext';
+import { useUserRole } from '../../context/UserRoleContext';
+import { useEnrolledCourses } from '../../queries/courseQueries';
 
 export const Courses: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
+  const { user } = useAuth();
+  const { role: userRole, loading: roleLoading } = useUserRole();
   
-  // Add a ref to track if courses have been loaded
-  const coursesLoadedRef = useRef<boolean>(false);
+  const { data, isLoading, error } = useEnrolledCourses(user?.uid, userRole);
+  
+  const courses = data?.courses || [];
+  const enrolledCourseIds = data?.enrolledIds || [];
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      // Skip fetching if courses are already loaded
-      if (coursesLoadedRef.current) {
-        console.log('Courses: Using cached courses data');
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        const service = CourseService.getInstance();
-        const authService = AuthService.getInstance();
-        
-        const role = await authService.getUserRole();
-        setUserRole(role);
-        console.log('Courses: User role', role);
-        
-        // Get current user
-        const currentUser = authService.getCurrentUser();
-        console.log('Courses: Current user', currentUser?.uid);
-        
-        if (currentUser) {
-          // Get user's enrolled courses
-          const enrolledCourseRefs = await authService.getUserEnrolledCourses();
-          console.log('Courses: Enrolled course refs', enrolledCourseRefs);
-          setEnrolledCourseIds(enrolledCourseRefs);
-          
-          if (role === 'admin') {
-            // Admins can see all courses
-            console.log('Courses: User is admin, fetching all courses');
-            const response = await service.getCourses();
-            console.log('Courses: All courses fetched', response.course.length);
-            setCourses(response.course);
-          } else {
-            // Students can only see enrolled courses
-            console.log('Courses: User is student, fetching enrolled courses');
-            if (enrolledCourseRefs.length > 0) {
-              // Fetch only the enrolled courses
-              console.log('Courses: Found enrolled course refs, fetching courses');
-              const enrolledCourses: Course[] = [];
-              
-              for (const courseId of enrolledCourseRefs) {
-                console.log('Courses: Fetching course', courseId);
-                const course = await service.getCourseById(courseId);
-                console.log('Courses: Course data', course);
-                if (course) {
-                  enrolledCourses.push(course);
-                }
-              }
-              
-              console.log('Courses: Setting enrolled courses', enrolledCourses.length);
-              setCourses(enrolledCourses);
-            } else {
-              console.log('Courses: No enrolled courses found');
-              setCourses([]);
-            }
-          }
-        } else {
-          console.log('Courses: No current user');
-          setCourses([]);
-        }
-        
-        // Mark courses as loaded
-        coursesLoadedRef.current = true;
-      } catch (error) {
-        console.error('Failed to fetch courses:', error);
-        setCourses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourses();
-  }, []);
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Courses Component State:', {
+      user,
+      userRole,
+      roleLoading,
+      isLoading,
+      data,
+      coursesCount: courses.length,
+      error,
+      queryEnabled: !!user?.uid && !!userRole
+    });
+  }, [user, userRole, roleLoading, isLoading, data, courses.length, error]);
 
   // Helper function to check if a user is enrolled in a course
   const isEnrolled = (courseId: string) => {
@@ -96,7 +35,7 @@ export const Courses: React.FC = () => {
 
   return (
     <div className="courses-container">
-      {loading ? (
+      {(isLoading || roleLoading) ? (
         <div className="loading-container">
           <p>Loading courses...</p>
         </div>
