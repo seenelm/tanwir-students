@@ -4,7 +4,7 @@ import { CourseService } from '../../services/courses/service/CourseService';
 import { Course } from '../../services/courses/types/course';
 import { AuthService } from '../../services/auth';
 import { CourseEnrollment } from '../../services/auth/types';
-import { useUserRole } from '../../context/UserRoleContext';
+import { useAuth } from '../../context/AuthContext';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { CourseAssignments } from '../assignments/CourseAssignments';
 import { EmailService } from '../../services/email/emailService';
@@ -12,7 +12,7 @@ import { CourseAttachments } from './CourseAttachments';
 import { DriveAttachmentForm } from './DriveAttachmentForm';
 import { Videos } from '../videos/Videos';
 import { CourseAttendance } from './CourseAttendance';
-import { useAuth } from '../../context/AuthContext';
+
 
 // Syllabus data structure
 interface SyllabusSemester {
@@ -92,7 +92,6 @@ export const CourseDetail: React.FC = () => {
   const [enrolledSemesters, setEnrolledSemesters] = useState<string[]>([]);
   const { courseId } = usePage();
   const { user } = useAuth();
-  const { role: userRole } = useUserRole();
   
   useEffect(() => {
     const courseService = CourseService.getInstance();
@@ -175,13 +174,13 @@ export const CourseDetail: React.FC = () => {
   
   useEffect(() => {
     // Fetch grades data when the grades tab is active and we have course data
-    if (activeTab === 'grades' && course && userRole) {
+    if (activeTab === 'grades' && course && user?.Role) {
       fetchGradesData();
     }
-  }, [activeTab, course, userRole]);
+  }, [activeTab, course, user?.Role]);
   
   const fetchGradesData = async () => {
-    if (!course || !userRole) return;
+    if (!course || !user?.Role) return;
     
     setGradesLoading(true);
     
@@ -195,7 +194,7 @@ export const CourseDetail: React.FC = () => {
       // Fetch all quiz results for this course in a single batch
       const allResults = await assignmentService.getAllQuizResultsForCourse(course.Id);
       
-      if (userRole === 'student') {
+      if (user?.Role === 'student') {
         // For students, filter only their own grades
         if (user) {
           const studentGrades: StudentGrade[] = [];
@@ -220,7 +219,7 @@ export const CourseDetail: React.FC = () => {
           
           setStudentGrades(studentGrades);
         }
-      } else if (userRole === 'admin') {
+      } else if (user?.Role === 'admin') {
         // For admins, organize grades by student
         if (enrolledStudents && enrolledStudents.length > 0) {
           const studentGradesMap: Record<string, StudentGrades> = {};
@@ -404,7 +403,7 @@ export const CourseDetail: React.FC = () => {
               <p className="empty">No students enrolled yet.</p>
             )}
             
-            {userRole === 'admin' && (
+            {user?.Role === 'admin' && (
               <button onClick={sendWelcomeEmails} disabled={emailSending}>
                 {emailSending ? 'Sending...' : emailSent ? 'Emails sent!' : 'Send welcome emails'}
               </button>
@@ -631,7 +630,7 @@ export const CourseDetail: React.FC = () => {
         return <p className="loading">Loading grades...</p>;
       }
       
-      if (userRole === 'student') {
+      if (user?.Role === 'student') {
         return (
           <div className="student-grades">
             <h3>Your Grades</h3>
@@ -683,7 +682,7 @@ export const CourseDetail: React.FC = () => {
             )}
           </div>
         );
-      } else if (userRole === 'admin') {
+      } else if (user?.Role === 'admin') {
         return (
           <div className="admin-grades">
             <h3>Student Grades</h3>
@@ -778,7 +777,7 @@ export const CourseDetail: React.FC = () => {
         <div className="course-attachments-container">
           <div className="attachments-header">
             <h3>Course Attachments</h3>
-            {userRole === 'admin' && (
+            {user?.Role === 'admin' && (
               <button 
                 className="add-attachment-btn" 
                 onClick={() => setShowAttachmentForm(!showAttachmentForm)}
@@ -788,7 +787,7 @@ export const CourseDetail: React.FC = () => {
             )}
           </div>
           
-          {userRole === 'admin' && showAttachmentForm && (
+          {user?.Role === 'admin' && showAttachmentForm && (
             <div className="attachment-form-container">
               <DriveAttachmentForm 
                 courseId={courseId || ''} 
@@ -808,7 +807,7 @@ export const CourseDetail: React.FC = () => {
           
           <CourseAttachments 
             attachments={course?.Attachments || []} 
-            enrolledSemesters={userRole === 'admin' ? undefined : enrolledSemesters}
+            enrolledSemesters={user?.Role === 'admin' ? undefined : enrolledSemesters}
           />
         </div>
       );
@@ -820,7 +819,7 @@ export const CourseDetail: React.FC = () => {
           <h3>Course Videos</h3>
           <Videos 
             playlistId={course?.playlist} 
-            enrolledSemesters={userRole === 'admin' ? undefined : enrolledSemesters}
+            enrolledSemesters={user?.Role === 'admin' ? undefined : enrolledSemesters}
           />
         </div>
       );

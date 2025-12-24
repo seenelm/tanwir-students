@@ -3,18 +3,16 @@ import { AssignmentDisplay } from '../../services/assignments/types/assignment';
 import { AssignmentCard } from './AssignmentCard';
 import confusedImage from '../../assets/confused.webp';
 import { useAuth } from '../../context/AuthContext';
-import { useUserRole } from '../../context/UserRoleContext';
 import { useAssignments } from '../../queries/assignmentQueries';
 import { useCourses } from '../../queries/courseQueries';
 
 export const Assignments: React.FC = () => {
   const { user } = useAuth();
-  const { role: userRole } = useUserRole();
   
   const { data: assignmentSummaries, isLoading: assignmentsLoading } = useAssignments();
   const { data: allCourses, isLoading: coursesLoading } = useCourses();
   
-  const isLoading = assignmentsLoading || (userRole === 'student' && coursesLoading);
+  const isLoading = assignmentsLoading || (user?.Role === 'student' && coursesLoading);
   
   // Filter and format assignments
   const assignments: AssignmentDisplay[] = React.useMemo(() => {
@@ -22,7 +20,7 @@ export const Assignments: React.FC = () => {
     
     let filteredAssignments = assignmentSummaries;
     
-    if (userRole === 'student' && user && allCourses) {
+    if (user?.Role === 'student' && user && allCourses) {
       // Get enrolled course IDs
       const enrolledIds = allCourses
         .filter(course => 
@@ -47,7 +45,7 @@ export const Assignments: React.FC = () => {
       dueDate: new Date(summary.DueDate).toLocaleDateString(),
       totalPoints: summary.Points,
     }));
-  }, [assignmentSummaries, userRole, user, allCourses]);
+  }, [assignmentSummaries, user, allCourses]);
 
   const groupByCourse = (assignments: AssignmentDisplay[]): Record<string, AssignmentDisplay[]> => {
     return assignments.reduce((groups: Record<string, AssignmentDisplay[]>, assignment) => {
@@ -90,7 +88,7 @@ export const Assignments: React.FC = () => {
           color: 'var(--text-secondary)',
           marginTop: '1rem'
         }}>
-          {userRole === 'student' 
+          {user?.Role === 'student' 
             ? 'No assignments found for your enrolled courses'
             : 'No assignments found'}
         </p>

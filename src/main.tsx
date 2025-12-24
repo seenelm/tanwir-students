@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';
-import { UserRoleProvider } from './context/UserRoleContext';
 import { AuthProvider } from './context/AuthContext';
 import { PageProvider } from './context/PageContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,11 +18,9 @@ root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <UserRoleProvider>
           <PageProvider>
             <App />
           </PageProvider>
-        </UserRoleProvider>
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>

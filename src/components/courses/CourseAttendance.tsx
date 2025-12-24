@@ -3,7 +3,6 @@ import { AttendanceService } from '../../services/attendance/service/AttendanceS
 import { ClassSession, StudentAttendanceSummary, AttendanceRecord } from '../../services/attendance/types/attendance';
 import './CourseAttendance.css';
 import { useAuth } from '../../context/AuthContext';
-import { useUserRole } from '../../context/UserRoleContext';
 
 interface CourseAttendanceProps {
   courseId: string;
@@ -24,7 +23,6 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
   const [activeSessions, setActiveSessions] = useState<ClassSession[]>([]);
   const [markedSessionIds, setMarkedSessionIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
-  const { role: userRole } = useUserRole();
   const currentUserId = user?.uid || null;
 
   useEffect(() => {
@@ -262,9 +260,9 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
 
   // Debug logging
   console.log('CourseAttendance Debug:', {
-    userRole,
+    userRole: user?.Role,
     activeSessions,
-    shouldShowBanner: userRole !== 'admin' && activeSessions.length > 0,
+    shouldShowBanner: user?.Role !== 'admin' && activeSessions.length > 0,
     currentUserId,
     sessionsCount: sessions.length,
     markedSessionIds: Array.from(markedSessionIds)
@@ -291,7 +289,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
       </div>
 
       {/* Student Self-Mark Section */}
-      {userRole !== 'admin' && activeSessions.length > 0 && (
+      {user?.Role !== 'admin' && activeSessions.length > 0 && (
         <div className="student-self-mark">
           <h4>Open Attendance Sessions</h4>
           <div className="active-sessions-list">
@@ -366,7 +364,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
 
       {view === 'sessions' && (
         <div className="attendance-sessions">
-          {userRole === 'admin' && (
+          {user?.Role === 'admin' && (
             <div className="add-session-section">
               {!showAddSession ? (
                 <button className="add-session-btn" onClick={() => setShowAddSession(true)}>
@@ -432,7 +430,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
                     {session.IsActive && (
                       <div className="session-status-badge active">🟢 Open for Attendance</div>
                     )}
-                    {userRole === 'admin' && (
+                    {user?.Role === 'admin' && (
                       <div className="session-actions" onClick={(e) => e.stopPropagation()}>
                         {session.IsActive ? (
                           <button 
@@ -459,7 +457,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
             )}
           </div>
 
-          {selectedSession && userRole === 'admin' && (
+          {selectedSession && user?.Role === 'admin' && (
             <div className="session-attendance">
               <h4>Mark Attendance - {formatDate(selectedSession.Date)}</h4>
               <table className="attendance-table">
@@ -518,7 +516,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, en
             </div>
           )}
 
-          {selectedSession && userRole !== 'admin' && (
+          {selectedSession && user?.Role !== 'admin' && (
             <div className="student-session-view">
               <h4>Session Details - {formatDate(selectedSession.Date)}</h4>
               {selectedSession.IsActive ? (

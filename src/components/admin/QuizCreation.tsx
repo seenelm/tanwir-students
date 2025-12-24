@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { QuizQuestion, QuizOption } from '../../services/assignments/types/assignment';
-import { useUserRole } from '../../context/UserRoleContext';
 import { useAuth } from '../../context/AuthContext';
 
 interface QuizCreationProps {
@@ -11,7 +10,6 @@ interface QuizCreationProps {
 }
 
 const QuizCreation: React.FC<QuizCreationProps> = ({ courseId }) => {
-  const { role } = useUserRole();
   const { user } = useAuth();
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
@@ -204,7 +202,7 @@ const QuizCreation: React.FC<QuizCreationProps> = ({ courseId }) => {
     }
   };
 
-  if (role !== 'admin') {
+  if (user?.Role !== 'admin') {
     return <div className="unauthorized">You must be an admin to access this page.</div>;
   }
 

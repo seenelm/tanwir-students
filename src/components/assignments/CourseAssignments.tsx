@@ -3,9 +3,9 @@ import { AssignmentService } from '../../services/assignments/service/Assignment
 import { Assignment } from '../../services/assignments/types/assignment';
 import { AssignmentCard } from './AssignmentCard';
 // import { usePage } from '../../context/PageContext';
-import { useUserRole } from '../../context/UserRoleContext';
 import { GoogleFormAssignmentCreator } from './GoogleFormAssignmentCreator';
 import { CourseService } from '../../services/courses/service/CourseService';
+import { useAuth } from '../../context/AuthContext';
 
 interface CourseAssignmentsProps {
   courseId: string;
@@ -17,8 +17,8 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId }
   const [showGoogleFormCreator, setShowGoogleFormCreator] = useState(false);
   const [courseName, setCourseName] = useState('');
   // const { setCurrentPage, setQuizCourseId } = usePage();
-  const { role } = useUserRole();
-  const isAdmin = role === 'admin';
+  const { user } = useAuth();
+  const isAdmin = user?.Role === 'admin';
 
   useEffect(() => {
     const fetchAssignments = async () => {
