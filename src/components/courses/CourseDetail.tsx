@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { usePage } from '../../context/PageContext';
-import { CourseService } from '../../services/courses/service/CourseService';
-import { Course } from '../../services/courses/types/course';
-import { AuthService } from '../../services/auth';
-import { CourseEnrollment } from '../../services/auth/types';
 import { useAuth } from '../../context/AuthContext';
+import { useCourseDetail } from '../../queries/courseQueries';
+import { useEnrolledStudents } from '../../queries/userQueries';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
 import { CourseAssignments } from '../assignments/CourseAssignments';
 import { EmailService } from '../../services/email/emailService';
@@ -78,99 +76,24 @@ interface StudentGrades {
 }
 
 export const CourseDetail: React.FC = () => {
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [allStudentGrades, setAllStudentGrades] = useState<StudentGrades[]>([]);
   const [gradesLoading, setGradesLoading] = useState(false);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
-  const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showAttachmentForm, setShowAttachmentForm] = useState(false);
-  const [enrolledSemesters, setEnrolledSemesters] = useState<string[]>([]);
   const { courseId } = usePage();
   const { user } = useAuth();
   
-  useEffect(() => {
-    const courseService = CourseService.getInstance();
-    const authService = AuthService.getInstance();
+  // Fetch course details and enrollment info using React Query
+  const { data: courseData, isLoading: loading, refetch: refetchCourse } = useCourseDetail(courseId ?? undefined, user?.uid);
+  const course = courseData?.course ?? null;
+  const enrolledSemesters = courseData?.enrolledSemesters ?? [];
   
-    const fetchCourseDetail = async () => {
-      if (!courseId) return;
-  
-      setLoading(true);
-  
-      // Get course from cache (which is now maintained by real-time listener)
-      const fetchedCourse = await courseService.getCourseById(courseId);
-      setCourse(fetchedCourse ?? null);
-
-      // Check if current user is enrolled and get semester enrollment
-      if (user && fetchedCourse) {
-        courseService.isStudentEnrolled(courseId, user.uid);
-        
-        // Get user's enrollment data to determine which semesters they're enrolled in
-        const userData = await authService.getUserData(user.uid);
-        if (userData?.courses) {
-          const enrollment: CourseEnrollment | undefined = userData.courses.find((c: any) => {
-            const courseRef = c.courseRef || '';
-            return courseRef.includes(courseId) || courseId.includes(courseRef.split('/')[1]);
-          });
-          
-          if (enrollment?.guidanceDetails?.plan) {
-            // Map plan values to semester tabs
-            const plan = enrollment.guidanceDetails.plan;
-            if (plan === 'Full Year') {
-              setEnrolledSemesters(['fall', 'spring']);
-            } else if (plan === 'Fall Semester') {
-              setEnrolledSemesters(['fall']);
-            } else if (plan === 'Spring Semester') {
-              setEnrolledSemesters(['spring']);
-            }
-          }
-        }
-      }
-      
-      // Fetch enrolled students from users collection
-      try {
-        const allUsers = await authService.getAllUsers();
-        
-        // Filter users who are enrolled in this course
-        // The courseRef format is 'courses/CourseName'
-        const enrolled = allUsers.filter(user => {
-          if (!user.courses || !Array.isArray(user.courses)) {
-            return false;
-          }
-          
-          return user.courses.some(course => {
-            // Check different possible formats of course reference
-            if (course.courseRef === `courses/${courseId}`) {
-              return true;
-            }
-            
-            // Also check if courseRef contains the courseId
-            if (course.courseRef && typeof course.courseRef === 'string' && 
-                (course.courseRef.includes(courseId) || courseId.includes(course.courseRef.split('/')[1]))) {
-              return true;
-            }
-            
-            
-            return false;
-          });
-        });
-        
-        console.log(`Found ${enrolled.length} students enrolled in course ${courseId}`);
-        setEnrolledStudents(enrolled);
-      } catch (error) {
-        console.error('Error fetching enrolled students:', error);
-      }
-      
-      setLoading(false);
-    };
-  
-    fetchCourseDetail();
-  }, [courseId, user]);
+  // Fetch enrolled students using React Query
+  const { data: enrolledStudents = [] } = useEnrolledStudents(courseId ?? undefined);
   
   useEffect(() => {
     // Fetch grades data when the grades tab is active and we have course data
@@ -226,7 +149,7 @@ export const CourseDetail: React.FC = () => {
           
           // Initialize the map with student info
           for (const student of enrolledStudents) {
-            const studentId = student.uid || student.id || student.studentId;
+            const studentId = student.uid;
             const studentName = getDisplayName(student);
             
             studentGradesMap[studentId] = {
@@ -324,7 +247,7 @@ export const CourseDetail: React.FC = () => {
       
       // Filter out students without email addresses in studentInfo
       const studentsWithEmails = enrolledStudents.filter(student => 
-        student.studentInfo?.email || student.email
+        student.email
       );
       
       if (studentsWithEmails.length === 0) {
@@ -341,18 +264,20 @@ export const CourseDetail: React.FC = () => {
       
       if (isAssociatesProgram) {
         // Format recipients for Associates Program
-        const recipients = studentsWithEmails.map(student => ({
-          email: student.studentInfo?.email || student.email,
-          name: getDisplayName(student)
-        }));
+        const recipients = studentsWithEmails
+          .filter(student => student.email)
+          .map(student => ({
+            email: student.email!,
+            name: getDisplayName(student)
+          }));
         
         console.log(`Sending Associates Program welcome emails to ${recipients.length} students`);
         success = await emailService.sendAssociatesProgramWelcomeEmails(recipients);
       } else {
         // Default to Prophetic Guidance format (just email addresses)
-        const studentEmails = studentsWithEmails.map(student => 
-          student.studentInfo?.email || student.email
-        );
+        const studentEmails = studentsWithEmails
+          .filter(student => student.email)
+          .map(student => student.email!);
         
         console.log(`Sending Prophetic Guidance welcome emails to ${studentEmails.length} students`);
         success = await emailService.sendPropheticGuidanceWelcomeEmails(studentEmails);
@@ -445,7 +370,7 @@ export const CourseDetail: React.FC = () => {
                         <p><strong>Instructors:</strong></p>
                         <ul className="instructors-list">
                           {course.CreatedBy ? 
-                            course.CreatedBy.split(',').map((instructor, idx) => (
+                            course.CreatedBy.split(',').map((instructor: string, idx: number) => (
                               <li key={`instructor-${idx}`}>{instructor.trim()}</li>
                             ))
                             : <li>No instructor information available</li>
@@ -791,15 +716,9 @@ export const CourseDetail: React.FC = () => {
             <div className="attachment-form-container">
               <DriveAttachmentForm 
                 courseId={courseId || ''} 
-                onAttachmentAdded={() => {
-                  // Refresh course data when a new attachment is added
-                  const courseService = CourseService.getInstance();
-                  courseService.getCourseById(courseId || '').then(refreshedCourse => {
-                    if (refreshedCourse) {
-                      setCourse(refreshedCourse);
-                      setShowAttachmentForm(false); // Hide form after successful submission
-                    }
-                  });
+                onAttachmentAdded={async () => {
+                  setShowAttachmentForm(false);
+                  await refetchCourse();
                 }}
               />
             </div>
