@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { useParams } from 'react-router';
 import { CourseAttachment } from '../../services/courses/types/course';
-import { usePage } from '../../context/PageContext';
 import { AttachmentCard } from './AttachmentCard';
 import './CourseAttachments.css';
 
@@ -12,7 +12,7 @@ interface CourseAttachmentsProps {
 type SemesterTab = 'fall' | 'spring' | 'all';
 
 export const CourseAttachments: React.FC<CourseAttachmentsProps> = ({ attachments, enrolledSemesters }) => {
-  const { courseId } = usePage();
+  const { courseId } = useParams<{ courseId: string }>();
   const [activeTab, setActiveTab] = useState<SemesterTab>('spring');
 
   // Determine which tabs should be visible based on enrollment
@@ -138,7 +138,7 @@ export const CourseAttachments: React.FC<CourseAttachmentsProps> = ({ attachment
             <AttachmentCard 
               key={attachment.id}
               attachment={attachment}
-              courseId={courseId}
+              courseId={courseId ?? null}
             />
           ))}
         </div>

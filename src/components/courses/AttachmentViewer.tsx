@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { usePage } from '../../context/PageContext';
+import { useParams } from 'react-router';
 import { CourseService } from '../../services/courses/service/CourseService';
 import { CourseAttachment } from '../../services/courses/types/course';
 import './CourseAttachments.css';
 
 export const AttachmentViewer: React.FC = () => {
-  const { courseId, attachmentId, setBreadcrumbs } = usePage();
+  const { courseId, attachmentId } = useParams<{ courseId: string; attachmentId: string }>();
   const [attachment, setAttachment] = useState<CourseAttachment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,15 +37,6 @@ export const AttachmentViewer: React.FC = () => {
         }
 
         setAttachment(foundAttachment);
-        
-        // Update breadcrumbs with course name and year information if available
-        let courseDisplayName = course.Name || 'Course';
-        if (course.Year) {
-          courseDisplayName = `${courseDisplayName}`;
-        }
-        
-        // Update breadcrumbs with course name, year, and attachment name
-        setBreadcrumbs(['Courses', courseDisplayName, foundAttachment.name]);
       } catch (err) {
         console.error('Error fetching attachment:', err);
         setError('Failed to load attachment');
@@ -55,7 +46,7 @@ export const AttachmentViewer: React.FC = () => {
     };
 
     fetchAttachment();
-  }, [courseId, attachmentId, setBreadcrumbs]);
+  }, [courseId, attachmentId]);
 
   // Function to modify Google Drive URLs for proper embedding
   const getModifiedDriveUrl = (url: string): string => {

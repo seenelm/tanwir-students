@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usePage } from '../../context/PageContext';
+import { useParams } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { useCourseDetail } from '../../queries/courseQueries';
 import { useEnrolledStudents } from '../../queries/userQueries';
@@ -84,7 +84,7 @@ export const CourseDetail: React.FC = () => {
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showAttachmentForm, setShowAttachmentForm] = useState(false);
-  const { courseId } = usePage();
+  const { courseId } = useParams<{ courseId: string }>();
   const { user } = useAuth();
   
   // Fetch course details and enrollment info using React Query

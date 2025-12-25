@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { useSignOut } from '../queries/authQueries';
 import '../styles/main.css';
@@ -11,7 +12,7 @@ type Route = {
 };
 
 const routes: Route[] = [
-  { path: '/home', title: 'Home', icon: 'home' },
+  { path: '/', title: 'Home', icon: 'home' },
   // Temporarily hidden tabs
   // { path: '/assignments', title: 'Assignments', icon: 'assignment' },
   { path: '/courses', title: 'Courses', icon: 'school' },
@@ -29,63 +30,27 @@ const CLASS_NAMES = {
 };
 
 interface SidebarProps {
-  currentPath: string;
-  setCurrentPage: (title: string) => void;
-  setCurrentPath: (path: string) => void;
+  currentPath: string; // Still needed for backward compatibility
   onClose?: () => void;
   isActive?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  currentPath,
-  setCurrentPage,
-  setCurrentPath,
   onClose,
   isActive = false,
 }) => {
   const { user } = useAuth();
   const { mutate: signOut } = useSignOut();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const handleSignOut = async () => {
     signOut();
   };
 
-  const navigateTo = (path: string, title: string) => {
-    // Update URL without reloading the page
-    window.history.pushState({}, '', path);
-    
-    // Update app state
-    setCurrentPath(path);
-    
-    // Map path to correct page title format for consistency
-    const pageTitle = mapPathToPageTitle(path, title);
-    setCurrentPage(pageTitle);
-    
-    // Close sidebar on mobile if needed
+  const navigateTo = (path: string) => {
+    navigate(path);
     onClose?.();
-  };
-
-  // Map path to the correct page title format that the header expects
-  const mapPathToPageTitle = (path: string, defaultTitle: string): string => {
-    // Extract the path without leading slash
-    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    
-    // Special case mappings if needed
-    switch(cleanPath) {
-      case 'home':
-        return 'Home';
-      case 'courses':
-        return 'Courses';
-      case 'videos':
-        return 'Videos';
-      case 'settings':
-        return 'Settings';
-      case 'scholarships':
-        return 'Financial Aid';
-      case 'students':
-        return 'Students';
-      default:
-        return defaultTitle;
-    }
   };
 
   // Filter routes based on user role
@@ -95,6 +60,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     return true;
   });
+
+  // Check if route is active
+  const isRouteActive = (routePath: string) => {
+    if (routePath === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(routePath);
+  };
 
   return (
     <div className={`${CLASS_NAMES.sidebar} ${isActive ? 'active' : ''}`}>
@@ -109,10 +82,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <li key={route.path}>
               <a
                 href={route.path}
-                className={currentPath === route.path ? 'active' : ''}
+                className={isRouteActive(route.path) ? 'active' : ''}
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateTo(route.path, route.title);
+                  navigateTo(route.path);
                 }}
               >
                 <span className="material-icons">{route.icon}</span> {route.title}

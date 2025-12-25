@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router';
 import { Assignment, QuizAssignment, GoogleFormAssignment } from '../../services/assignments/types/assignment';
 import { AssignmentService } from '../../services/assignments/service/AssignmentService';
-import { usePage } from '../../context/PageContext';
 import { auth } from '../../config/firebase';
 
 type TabType = 'details' | 'attachments' | 'discussions' | 'questions' | 'form';
 
 export const AssignmentDetail: React.FC = () => {
-  const { assignmentId, setBreadcrumbs } = usePage();
+  const { assignmentId } = useParams<{ assignmentId: string }>();
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('details');
@@ -43,9 +43,6 @@ export const AssignmentDetail: React.FC = () => {
         const result = await service.getAssignmentById(assignmentId);
         if (cancelled) return;
 
-        if (result) {
-          setBreadcrumbs(['Courses', result.CourseName, result.Title]);
-        }
         setAssignment(result);
         setLoading(false);
 
@@ -92,7 +89,7 @@ export const AssignmentDetail: React.FC = () => {
 
     fetchAssignmentAndResult();
     return () => { cancelled = true; };
-  }, [assignmentId, setBreadcrumbs]);
+  }, [assignmentId]);
 
   useEffect(() => {
     if (!assignmentId || activeTab === 'details') return;

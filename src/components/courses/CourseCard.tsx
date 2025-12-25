@@ -1,6 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import { Card } from '../Card';
-import { usePage } from '../../context/PageContext';
 
 interface CourseCardProps {
   courseId: string;
@@ -21,12 +21,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   createdBy,
   isEnrolled = false,
 }) => {
-  const { setCurrentPage, setCourseId, setBreadcrumbs } = usePage();
+  const navigate = useNavigate();
   
   const handleCardClick = () => {
-    setCourseId(courseId);
-    setBreadcrumbs(['Courses', name]);
-    setCurrentPage('CourseDetail');
+    navigate(`/courses/${courseId}`);
   };
 
   return (

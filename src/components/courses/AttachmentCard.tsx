@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '../Card';
-import { usePage } from '../../context/PageContext';
 import { CourseAttachment } from '../../services/courses/types/course';
+import { useNavigate } from 'react-router';
 
 interface AttachmentCardProps {
   attachment: CourseAttachment;
@@ -12,11 +12,12 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
   attachment,
   courseId
 }) => {
-  const { setPage } = usePage();
+  
+  const navigate = useNavigate();
   
   const handleCardClick = () => {
     if (courseId) {
-      setPage('attachment', { courseId, attachmentId: attachment.id });
+      navigate(`/courses/${courseId}/attachments/${attachment.id}`);
     } else {
       console.error('Cannot navigate to attachment');
     }

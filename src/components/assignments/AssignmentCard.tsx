@@ -1,6 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import { Card } from '../Card';
-import { usePage } from '../../context/PageContext';
 
 interface AssignmentCardProps {
   id: string;
@@ -19,12 +19,10 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   dueDate,
   totalPoints,
 }) => {
-  const { setCurrentPage, setBreadcrumbs, setAssignmentId } = usePage();
+  const navigate = useNavigate();
   
   const handleCardClick = () => {
-    setAssignmentId(id);
-    setBreadcrumbs(['Assignments', title]);
-    setCurrentPage('AssignmentDetail');
+    navigate(`/assignments/${id}`);
   };
   
   return (
